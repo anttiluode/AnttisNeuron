@@ -1,0 +1,928 @@
+From bff3b85418717d28ff4370f24dc46a1a1d8a20c2 Mon Sep 17 00:00:00 2001
+From: "Claude (sandbox)" <claude@anthropic.local>
+Date: Mon, 14 Sep 2026 14:48:38 +0000
+Subject: [PATCH] feat: add Gate 6B feature ranking across the real 24 worlds
+
+Two questions kept separate: what explains Gate 6's per-world outcome
+(extends Gate 5B's eigenvalue/eigenvector hybrid-operator split from one
+tree to all 24 worlds), and what predicts it in advance (Aizenbud-style
+single-feature R^2 ranking of spectral gap, tree depth, port-sensor path
+length, and initial alignment against adaptive_minus_frozen/shuffled).
+
+Precondition checked before trusting anything downstream: regenerated
+adaptive_minus_frozen and adaptive_minus_shuffled for all 24 worlds by
+importing gate6_many_worlds' own functions verbatim, and required them to
+match results/gate6.json to 0.0 exactly. reproduces_gate6_receipt in the
+frozen output records that check so it can't silently drift.
+
+Headline result: eigenvector-only hybrid gain explains R^2=0.989 of
+adaptive_minus_frozen (0.852 vs shuffled), eigenvalue-only explains 0.302;
+sign matches in 21/24 vs 13/24 worlds; holds excluding the three largest
+swings. The pre-existing-structure ranking is much weaker -- spectral gap,
+the closest analogue to Aizenbud's total dendritic area, gets R^2=0.002.
+Best predictor is initial alignment alone (R^2=0.384); best two-feature
+pair barely improves on that (0.451). Written up plainly in the
+interpretation field rather than as a discovery it isn't.
+
+76/76 tests green on this checkout (66 pre-existing + 10 new).
+---
+ experiments/gate6b_feature_ranking.py | 295 +++++++++++++++++
+ results/gate6b.json                   | 458 ++++++++++++++++++++++++++
+ tests/test_gate6b.py                  | 118 +++++++
+ 3 files changed, 871 insertions(+)
+ create mode 100644 experiments/gate6b_feature_ranking.py
+ create mode 100644 results/gate6b.json
+ create mode 100644 tests/test_gate6b.py
+
+diff --git a/experiments/gate6b_feature_ranking.py b/experiments/gate6b_feature_ranking.py
+new file mode 100644
+index 0000000..aa3c510
+--- /dev/null
++++ b/experiments/gate6b_feature_ranking.py
+@@ -0,0 +1,295 @@
++"""Gate 6B: what predicts Gate 6's per-world outcome, and what explains it.
++
++Two different questions, kept separate on purpose.
++
++Explains-the-outcome (post-adaptation): extends Gate 5B's eigenvalue/eigenvector
++hybrid-operator decomposition, originally run on one hand-built tree, to all 24
++of Gate 6's worlds. Requires having already run the adaptation.
++
++Predicts-the-outcome (pre-existing structure): ranks features knowable before
++any adaptation runs -- spectral gap, tree depth, port-to-sensor path length,
++initial alignment -- against Gate 6's adaptive_minus_frozen / adaptive_minus_shuffled,
++the way Aizenbud et al. rank morphological features against FCI. Single-feature
++R^2 first; a best pair is reported but not chased, since n=24 worlds and several
++candidate features is already close to the edge of what will not overfit.
++
++This experiment reuses Gate 6's and Gate 5B's own functions verbatim (imported,
++not reimplemented) and cross-checks its regenerated adaptive_minus_frozen /
++adaptive_minus_shuffled against the frozen results/gate6.json receipt as a
++precondition: if that reproduction is not exact, nothing downstream is trusted.
++"""
++from __future__ import annotations
++
++import json
++from collections import deque
++from itertools import combinations
++from pathlib import Path
++
++import numpy as np
++
++from anttis_neuron.cable import simulate_cable, visible_physical_modes
++from anttis_neuron.oja import oja_fit
++from anttis_neuron.worlds import CableWorld, generate_world
++
++from experiments.common import emit
++from experiments.gate5b_spectral_audit import (
++    hybrid_operators,
++    principal_angles,
++    sorted_nonuniform_eigendecomposition,
++)
++from experiments.gate6_many_worlds import (
++    _evaluate,
++    _initial_q_target,
++    _make_world_tapes,
++    _subspace_alignment,
++    _train_conditions,
++    _world_operator,
++)
++
++PRE_EXISTING_FEATURES = (
++    "spectral_gap",
++    "spectral_gap_ratio",
++    "tree_depth",
++    "mean_port_sensor_dist",
++    "max_port_sensor_dist",
++    "initial_alignment",
++)
++POST_ADAPTATION_FEATURES = (
++    "conductance_cv",
++    "basis_rotation_deg",
++    "eigval_only_gain",
++    "eigvec_only_gain",
++)
++
++
++def _tree_distances(n_nodes: int, edges: np.ndarray) -> dict[int, dict[int, int]]:
++    """All-pairs shortest-path distances on an unweighted tree via BFS."""
++    adjacency: dict[int, list[int]] = {i: [] for i in range(n_nodes)}
++    for i, j in edges:
++        adjacency[int(i)].append(int(j))
++        adjacency[int(j)].append(int(i))
++
++    def bfs(source: int) -> dict[int, int]:
++        dist = {source: 0}
++        queue = deque([source])
++        while queue:
++            u = queue.popleft()
++            for v in adjacency[u]:
++                if v not in dist:
++                    dist[v] = dist[u] + 1
++                    queue.append(v)
++        return dist
++
++    return {node: bfs(node) for node in range(n_nodes)}
++
++
++def _evaluate_custom_operator(
++    a: np.ndarray,
++    b: np.ndarray,
++    s: np.ndarray,
++    tapes: list[np.ndarray],
++    *,
++    oja_seed_base: int,
++) -> float:
++    """Mean held-out alignment of an arbitrary symmetric diagnostic operator."""
++    physical_modes = visible_physical_modes(a, s)[:3]
++    if len(physical_modes) < 3:
++        raise FloatingPointError("Gate 6B requires three visible non-uniform modes")
++    alignments = []
++    for index, tape in enumerate(tapes):
++        observations = simulate_cable(tape, a, b, s, burn=250)
++        rms = float(np.sqrt(np.mean(np.sum(observations * observations, axis=1))))
++        if rms <= 0.0 or not np.isfinite(rms):
++            raise FloatingPointError("invalid Gate 6B observation RMS")
++        learned = oja_fit(observations / rms, lr=0.001, epochs=3, seed=oja_seed_base + index)
++        alignments.append(_subspace_alignment(learned, physical_modes))
++    return float(np.mean(alignments))
++
++
++def world_features(world: CableWorld, *, seed: int, tape_seed: int) -> dict:
++    """Reconstruct one Gate 6 world exactly and extract Gate 6B's candidate features."""
++    adaptation_tapes, heldout_tapes = _make_world_tapes(world, tape_seed)
++    q_target = _initial_q_target(world, adaptation_tapes[0])
++    trained, _ = _train_conditions(world, adaptation_tapes, q_target=q_target, seed=tape_seed)
++
++    oja_seed_base = int(np.random.SeedSequence([tape_seed, world.seed, 3000]).generate_state(1)[0])
++
++    a_frozen, b, s = _world_operator(world, trained["frozen"])
++    a_local, _, _ = _world_operator(world, trained["local"])
++
++    eval_frozen = _evaluate(world, trained["frozen"], heldout_tapes, oja_seed_base=oja_seed_base)
++    eval_local = _evaluate(world, trained["local"], heldout_tapes, oja_seed_base=oja_seed_base)
++    eval_shuffled = _evaluate(world, trained["shuffled"], heldout_tapes, oja_seed_base=oja_seed_base)
++
++    delta_frozen = eval_local["mean_alignment"] - eval_frozen["mean_alignment"]
++    delta_shuffled = eval_local["mean_alignment"] - eval_shuffled["mean_alignment"]
++
++    a_lambda, a_q = hybrid_operators(a_frozen, a_local)
++    lambda_alignment = _evaluate_custom_operator(a_lambda, b, s, heldout_tapes, oja_seed_base=oja_seed_base)
++    q_alignment = _evaluate_custom_operator(a_q, b, s, heldout_tapes, oja_seed_base=oja_seed_base)
++
++    frozen_vals, frozen_vecs = sorted_nonuniform_eigendecomposition(a_frozen)
++    local_vals, local_vecs = sorted_nonuniform_eigendecomposition(a_local)
++    basis_rotation_deg = float(np.degrees(np.mean(principal_angles(frozen_vecs, local_vecs, rank=3))))
++
++    distances = _tree_distances(world.n_nodes, world.edges)
++    depth_from_root = distances[0]
++    port_sensor_dists = [distances[p][sn] for p in world.port_nodes for sn in world.sensor_nodes]
++
++    return {
++        "world_index": world.index,
++        "world_seed": world.seed,
++        "delta_frozen": delta_frozen,
++        "delta_shuffled": delta_shuffled,
++        "spectral_gap": float(frozen_vals[0] - frozen_vals[1]),
++        "spectral_gap_ratio": float(frozen_vals[0] / frozen_vals[1]) if frozen_vals[1] != 0 else float("nan"),
++        "conductance_cv": float(np.std(trained["local"]) / np.mean(trained["local"])),
++        "tree_depth": int(max(depth_from_root.values())),
++        "mean_port_sensor_dist": float(np.mean(port_sensor_dists)),
++        "max_port_sensor_dist": float(np.max(port_sensor_dists)),
++        "initial_alignment": eval_frozen["mean_alignment"],
++        "basis_rotation_deg": basis_rotation_deg,
++        "eigval_only_gain": lambda_alignment - eval_frozen["mean_alignment"],
++        "eigvec_only_gain": q_alignment - eval_frozen["mean_alignment"],
++    }
++
++
++def _r2_single(x: list[float], y: list[float]) -> float:
++    xv = np.asarray(x, dtype=float)
++    yv = np.asarray(y, dtype=float)
++    if xv.size < 3:
++        raise ValueError("Gate 6B correlation ranking needs at least 3 worlds to be well-defined")
++    if float(np.std(xv)) <= 1e-12 or float(np.std(yv)) <= 1e-12:
++        raise ValueError("Gate 6B correlation is undefined when a feature or target has zero variance")
++    r = float(np.corrcoef(xv, yv)[0, 1])
++    return r * r
++
++
++def _r2_multi(features: list[list[float]], y: list[float]) -> float:
++    x = np.column_stack([np.asarray(f, dtype=float) for f in features])
++    yv = np.asarray(y, dtype=float)
++    design = np.column_stack([x, np.ones(len(yv))])
++    coefficients, *_ = np.linalg.lstsq(design, yv, rcond=None)
++    predicted = design @ coefficients
++    residual = float(np.sum((yv - predicted) ** 2))
++    total = float(np.sum((yv - np.mean(yv)) ** 2))
++    return 1.0 - residual / total
++
++
++def _rank(rows: list[dict], features: tuple[str, ...], target_key: str) -> dict[str, float]:
++    y = [row[target_key] for row in rows]
++    return {feature: _r2_single([row[feature] for row in rows], y) for feature in features}
++
++
++def run(seed: int = 17, n_worlds: int = 24, *, receipt_path: str = "results/gate6.json") -> dict:
++    if not 1 <= n_worlds <= 24:
++        raise ValueError("Gate 6B requires 1 <= n_worlds <= 24")
++    master_seed = 1701 + seed
++    tape_seed = seed + 6000
++
++    rows = [
++        world_features(generate_world(index, master_seed=master_seed), seed=seed, tape_seed=tape_seed)
++        for index in range(n_worlds)
++    ]
++
++    max_mismatch_frozen = 0.0
++    max_mismatch_shuffled = 0.0
++    if n_worlds == 24 and Path(receipt_path).exists():
++        recorded = {w["world_index"]: w for w in json.loads(Path(receipt_path).read_text())["worlds"]}
++        for row in rows:
++            recorded_world = recorded[row["world_index"]]
++            max_mismatch_frozen = max(
++                max_mismatch_frozen, abs(row["delta_frozen"] - recorded_world["adaptive_minus_frozen"])
++            )
++            max_mismatch_shuffled = max(
++                max_mismatch_shuffled, abs(row["delta_shuffled"] - recorded_world["adaptive_minus_shuffled"])
++            )
++
++    frozen_r2 = _rank(rows, PRE_EXISTING_FEATURES, "delta_frozen")
++    shuffled_r2 = _rank(rows, PRE_EXISTING_FEATURES, "delta_shuffled")
++    frozen_r2_post = _rank(rows, POST_ADAPTATION_FEATURES, "delta_frozen")
++    shuffled_r2_post = _rank(rows, POST_ADAPTATION_FEATURES, "delta_shuffled")
++
++    delta_frozen = [row["delta_frozen"] for row in rows]
++    best_pair: tuple[float, str, str] | None = None
++    for f1, f2 in combinations(PRE_EXISTING_FEATURES, 2):
++        r2 = _r2_multi([[row[f1] for row in rows], [row[f2] for row in rows]], delta_frozen)
++        if best_pair is None or r2 > best_pair[0]:
++            best_pair = (r2, f1, f2)
++    assert best_pair is not None
++
++    abs_delta = np.abs(np.asarray(delta_frozen))
++    extreme_indices = set(np.argsort(abs_delta)[::-1][:3].tolist())
++    keep = [i for i in range(len(rows)) if i not in extreme_indices]
++    eigvec_gain = [row["eigvec_only_gain"] for row in rows]
++    eigval_gain = [row["eigval_only_gain"] for row in rows]
++    eigvec_sign_matches = sum(
++        1 for row in rows if np.sign(row["eigvec_only_gain"]) == np.sign(row["delta_frozen"]) or abs(row["delta_frozen"]) < 1e-4
++    )
++    eigval_sign_matches = sum(
++        1 for row in rows if np.sign(row["eigval_only_gain"]) == np.sign(row["delta_frozen"]) or abs(row["delta_frozen"]) < 1e-4
++    )
++
++    return {
++        "gate": "6B",
++        "seed": seed,
++        "n_worlds": n_worlds,
++        "reproduces_gate6_receipt": {
++            "max_mismatch_delta_frozen": max_mismatch_frozen,
++            "max_mismatch_delta_shuffled": max_mismatch_shuffled,
++        },
++        "feature_groups": {
++            "pre_existing": list(PRE_EXISTING_FEATURES),
++            "post_adaptation": list(POST_ADAPTATION_FEATURES),
++        },
++        "single_feature_r2": {
++            "pre_existing_vs_delta_frozen": frozen_r2,
++            "pre_existing_vs_delta_shuffled": shuffled_r2,
++            "post_adaptation_vs_delta_frozen": frozen_r2_post,
++            "post_adaptation_vs_delta_shuffled": shuffled_r2_post,
++        },
++        "best_pre_existing_pair_vs_delta_frozen": {
++            "features": [best_pair[1], best_pair[2]],
++            "r2": best_pair[0],
++        },
++        "mechanism_summary": {
++            "mean_abs_eigvec_only_gain": float(np.mean(np.abs(eigvec_gain))),
++            "mean_abs_eigval_only_gain": float(np.mean(np.abs(eigval_gain))),
++            "eigvec_sign_matches_delta_frozen": eigvec_sign_matches,
++            "eigval_sign_matches_delta_frozen": eigval_sign_matches,
++            "n_worlds_scored": len(rows),
++            "eigvec_r2_excluding_three_largest_swings": (
++                _r2_single([eigvec_gain[i] for i in keep], [delta_frozen[i] for i in keep])
++                if len(keep) >= 3
++                else None
++            ),
++            "eigval_r2_excluding_three_largest_swings": (
++                _r2_single([eigval_gain[i] for i in keep], [delta_frozen[i] for i in keep])
++                if len(keep) >= 3
++                else None
++            ),
++        },
++        "worlds": rows,
++        "interpretation": (
++            "post_adaptation features explain how Gate 6's outcome happened (extends Gate 5B's "
++            "hybrid-operator decomposition from one tree to all 24 worlds); pre_existing features "
++            "test whether that outcome could have been predicted before running adaptation, the way "
++            "Aizenbud et al. rank morphological features against FCI; the two questions are reported "
++            "separately and neither is optimized to look better than it is"
++        ),
++    }
++
++
++def _main() -> None:
++    import argparse
++
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--seed", type=int, default=17)
++    parser.add_argument("--worlds", type=int, default=24)
++    parser.add_argument("--out", type=str, default=None)
++    args = parser.parse_args()
++    emit(run(seed=args.seed, n_worlds=args.worlds), args.out)
++
++
++if __name__ == "__main__":
++    _main()
+diff --git a/results/gate6b.json b/results/gate6b.json
+new file mode 100644
+index 0000000..6ac031a
+--- /dev/null
++++ b/results/gate6b.json
+@@ -0,0 +1,458 @@
++{
++  "best_pre_existing_pair_vs_delta_frozen": {
++    "features": [
++      "spectral_gap",
++      "initial_alignment"
++    ],
++    "r2": 0.4513800728673485
++  },
++  "feature_groups": {
++    "post_adaptation": [
++      "conductance_cv",
++      "basis_rotation_deg",
++      "eigval_only_gain",
++      "eigvec_only_gain"
++    ],
++    "pre_existing": [
++      "spectral_gap",
++      "spectral_gap_ratio",
++      "tree_depth",
++      "mean_port_sensor_dist",
++      "max_port_sensor_dist",
++      "initial_alignment"
++    ]
++  },
++  "gate": "6B",
++  "interpretation": "post_adaptation features explain how Gate 6's outcome happened (extends Gate 5B's hybrid-operator decomposition from one tree to all 24 worlds); pre_existing features test whether that outcome could have been predicted before running adaptation, the way Aizenbud et al. rank morphological features against FCI; the two questions are reported separately and neither is optimized to look better than it is",
++  "mechanism_summary": {
++    "eigval_r2_excluding_three_largest_swings": 0.4494457888032426,
++    "eigval_sign_matches_delta_frozen": 13,
++    "eigvec_r2_excluding_three_largest_swings": 0.8512702990631063,
++    "eigvec_sign_matches_delta_frozen": 21,
++    "mean_abs_eigval_only_gain": 0.007674112126342313,
++    "mean_abs_eigvec_only_gain": 0.043106473942525314,
++    "n_worlds_scored": 24
++  },
++  "n_worlds": 24,
++  "reproduces_gate6_receipt": {
++    "max_mismatch_delta_frozen": 0.0,
++    "max_mismatch_delta_shuffled": 0.0
++  },
++  "seed": 17,
++  "single_feature_r2": {
++    "post_adaptation_vs_delta_frozen": {
++      "basis_rotation_deg": 0.0577374711431203,
++      "conductance_cv": 0.0991441741107644,
++      "eigval_only_gain": 0.3024666356613921,
++      "eigvec_only_gain": 0.9886276623138542
++    },
++    "post_adaptation_vs_delta_shuffled": {
++      "basis_rotation_deg": 0.0707700771979355,
++      "conductance_cv": 0.09320549104678529,
++      "eigval_only_gain": 0.1767894521767004,
++      "eigvec_only_gain": 0.8521604884934993
++    },
++    "pre_existing_vs_delta_frozen": {
++      "initial_alignment": 0.3838484199768388,
++      "max_port_sensor_dist": 0.06903120100502942,
++      "mean_port_sensor_dist": 0.055512828028334384,
++      "spectral_gap": 0.0022356834574720147,
++      "spectral_gap_ratio": 0.0022358787886323623,
++      "tree_depth": 0.07566561028895576
++    },
++    "pre_existing_vs_delta_shuffled": {
++      "initial_alignment": 0.23225123191713343,
++      "max_port_sensor_dist": 0.13774697056511845,
++      "mean_port_sensor_dist": 0.0804271685574848,
++      "spectral_gap": 0.0058569808038029065,
++      "spectral_gap_ratio": 0.005877328287477573,
++      "tree_depth": 0.06498460902187597
++    }
++  },
++  "worlds": [
++    {
++      "basis_rotation_deg": 14.993101092665174,
++      "conductance_cv": 0.48616430912040826,
++      "delta_frozen": 0.002802504799639949,
++      "delta_shuffled": -0.0006067490304417777,
++      "eigval_only_gain": 0.0003040607272860596,
++      "eigvec_only_gain": 0.005789461978433219,
++      "initial_alignment": 0.9739822216145064,
++      "max_port_sensor_dist": 5.0,
++      "mean_port_sensor_dist": 2.375,
++      "spectral_gap": 0.007706422129603707,
++      "spectral_gap_ratio": 1.007914268489413,
++      "tree_depth": 4,
++      "world_index": 0,
++      "world_seed": 3852682346
++    },
++    {
++      "basis_rotation_deg": 18.518192592681007,
++      "conductance_cv": 0.44773267366887515,
++      "delta_frozen": -0.01090660387711817,
++      "delta_shuffled": -0.013371191867196264,
++      "eigval_only_gain": 0.002623594075637725,
++      "eigvec_only_gain": -0.016030134033949706,
++      "initial_alignment": 0.9915826918757847,
++      "max_port_sensor_dist": 7.0,
++      "mean_port_sensor_dist": 3.5,
++      "spectral_gap": 0.012739362716243874,
++      "spectral_gap_ratio": 1.0130829501972214,
++      "tree_depth": 4,
++      "world_index": 1,
++      "world_seed": 1322900178
++    },
++    {
++      "basis_rotation_deg": 18.628063033431456,
++      "conductance_cv": 0.46966360266781293,
++      "delta_frozen": 0.002700195173272135,
++      "delta_shuffled": -0.0011984142817700327,
++      "eigval_only_gain": -0.0012215570302258616,
++      "eigvec_only_gain": 0.0006320692167003372,
++      "initial_alignment": 0.9927354032284308,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 2.75,
++      "spectral_gap": 0.011535054889422192,
++      "spectral_gap_ratio": 1.0118461615389989,
++      "tree_depth": 3,
++      "world_index": 2,
++      "world_seed": 3723194105
++    },
++    {
++      "basis_rotation_deg": 8.110485580545788,
++      "conductance_cv": 0.38468439376348446,
++      "delta_frozen": -0.05000482204764567,
++      "delta_shuffled": -0.06474279514910486,
++      "eigval_only_gain": 0.018882724502246484,
++      "eigvec_only_gain": -0.07152367301218399,
++      "initial_alignment": 0.8982661380660542,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 3.125,
++      "spectral_gap": 0.01175871952737062,
++      "spectral_gap_ratio": 1.0120758585328233,
++      "tree_depth": 5,
++      "world_index": 3,
++      "world_seed": 3427690882
++    },
++    {
++      "basis_rotation_deg": 18.53051775017947,
++      "conductance_cv": 0.5054719055276995,
++      "delta_frozen": -0.005511342952240428,
++      "delta_shuffled": 0.001676602090906698,
++      "eigval_only_gain": -0.0002849162195955879,
++      "eigvec_only_gain": -0.0028223525974571118,
++      "initial_alignment": 0.9984325131485285,
++      "max_port_sensor_dist": 3.0,
++      "mean_port_sensor_dist": 2.0,
++      "spectral_gap": 0.014066421525489425,
++      "spectral_gap_ratio": 1.0145045489026912,
++      "tree_depth": 4,
++      "world_index": 4,
++      "world_seed": 1005754751
++    },
++    {
++      "basis_rotation_deg": 6.294149261896445,
++      "conductance_cv": 0.4081899546168267,
++      "delta_frozen": -0.11100971140531868,
++      "delta_shuffled": 0.016296753634204353,
++      "eigval_only_gain": 0.01446856618911252,
++      "eigvec_only_gain": -0.12490408268457887,
++      "initial_alignment": 0.7922083645932637,
++      "max_port_sensor_dist": 4.0,
++      "mean_port_sensor_dist": 2.75,
++      "spectral_gap": 0.004469237789453739,
++      "spectral_gap_ratio": 1.0045897755422575,
++      "tree_depth": 3,
++      "world_index": 5,
++      "world_seed": 1030040363
++    },
++    {
++      "basis_rotation_deg": 7.662395409584156,
++      "conductance_cv": 0.4291567460081445,
++      "delta_frozen": 0.01551510825898883,
++      "delta_shuffled": 0.02389548712604639,
++      "eigval_only_gain": -0.00047183596238442593,
++      "eigvec_only_gain": 0.010023512946488289,
++      "initial_alignment": 0.9753860262599618,
++      "max_port_sensor_dist": 4.0,
++      "mean_port_sensor_dist": 2.625,
++      "spectral_gap": 0.005616057447049405,
++      "spectral_gap_ratio": 1.005745491467143,
++      "tree_depth": 3,
++      "world_index": 6,
++      "world_seed": 1253372107
++    },
++    {
++      "basis_rotation_deg": 7.815931598636375,
++      "conductance_cv": 0.4712274983236145,
++      "delta_frozen": 0.01401598765289136,
++      "delta_shuffled": -0.003993183059777472,
++      "eigval_only_gain": 0.007807942848065963,
++      "eigvec_only_gain": 0.01833927919527567,
++      "initial_alignment": 0.9782133202012535,
++      "max_port_sensor_dist": 5.0,
++      "mean_port_sensor_dist": 2.375,
++      "spectral_gap": 0.01023557413867815,
++      "spectral_gap_ratio": 1.0105116330917827,
++      "tree_depth": 3,
++      "world_index": 7,
++      "world_seed": 2176072552
++    },
++    {
++      "basis_rotation_deg": 10.963424961513063,
++      "conductance_cv": 0.41199946565646844,
++      "delta_frozen": 0.000255489879771309,
++      "delta_shuffled": 0.004135757602635848,
++      "eigval_only_gain": -0.0003874359053729348,
++      "eigvec_only_gain": -0.00018554110073087937,
++      "initial_alignment": 0.9961604815338966,
++      "max_port_sensor_dist": 5.0,
++      "mean_port_sensor_dist": 2.5,
++      "spectral_gap": 0.012739362716244207,
++      "spectral_gap_ratio": 1.0130829501972216,
++      "tree_depth": 4,
++      "world_index": 8,
++      "world_seed": 3542854633
++    },
++    {
++      "basis_rotation_deg": 15.45716172700647,
++      "conductance_cv": 0.4777473469064272,
++      "delta_frozen": -0.0071709148201116735,
++      "delta_shuffled": -0.006429004757264933,
++      "eigval_only_gain": -0.0006898885731865256,
++      "eigvec_only_gain": -0.007448913931519696,
++      "initial_alignment": 0.9983197296852164,
++      "max_port_sensor_dist": 4.0,
++      "mean_port_sensor_dist": 2.375,
++      "spectral_gap": 0.00377351261421377,
++      "spectral_gap_ratio": 1.0038667273091815,
++      "tree_depth": 4,
++      "world_index": 9,
++      "world_seed": 3641565284
++    },
++    {
++      "basis_rotation_deg": 5.6913286468965625,
++      "conductance_cv": 0.4368133576547167,
++      "delta_frozen": 0.10774673348172581,
++      "delta_shuffled": 0.08126726724717792,
++      "eigval_only_gain": 0.040617471300786856,
++      "eigvec_only_gain": 0.0862264737947902,
++      "initial_alignment": 0.795554935896612,
++      "max_port_sensor_dist": 5.0,
++      "mean_port_sensor_dist": 3.0,
++      "spectral_gap": 0.006595230622898018,
++      "spectral_gap_ratio": 1.0067418615536206,
++      "tree_depth": 5,
++      "world_index": 10,
++      "world_seed": 3464136445
++    },
++    {
++      "basis_rotation_deg": 6.2375550991984,
++      "conductance_cv": 0.4738679252528018,
++      "delta_frozen": 0.3435117675800847,
++      "delta_shuffled": 0.1963646630702196,
++      "eigval_only_gain": 0.041038047695867164,
++      "eigvec_only_gain": 0.3273420142606639,
++      "initial_alignment": 0.3968840824710508,
++      "max_port_sensor_dist": 4.0,
++      "mean_port_sensor_dist": 2.625,
++      "spectral_gap": 0.004469237789455294,
++      "spectral_gap_ratio": 1.004589775542259,
++      "tree_depth": 2,
++      "world_index": 11,
++      "world_seed": 1868454829
++    },
++    {
++      "basis_rotation_deg": 11.828199116902463,
++      "conductance_cv": 0.4312094989210042,
++      "delta_frozen": -0.0018187819285152562,
++      "delta_shuffled": -0.0019293576301998572,
++      "eigval_only_gain": 0.0010065534951874122,
++      "eigvec_only_gain": -0.00020669912100435006,
++      "initial_alignment": 0.9974199410545435,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 3.375,
++      "spectral_gap": 0.01148702745675767,
++      "spectral_gap_ratio": 1.0117968387805811,
++      "tree_depth": 5,
++      "world_index": 12,
++      "world_seed": 927466591
++    },
++    {
++      "basis_rotation_deg": 8.644001838647748,
++      "conductance_cv": 0.4394304089496079,
++      "delta_frozen": -0.012093539885758453,
++      "delta_shuffled": 0.006147664134900865,
++      "eigval_only_gain": -0.002797498023396905,
++      "eigvec_only_gain": -0.006215515756424095,
++      "initial_alignment": 0.9904458988889079,
++      "max_port_sensor_dist": 5.0,
++      "mean_port_sensor_dist": 3.0,
++      "spectral_gap": 0.0035622005932558487,
++      "spectral_gap_ratio": 1.0036361354368533,
++      "tree_depth": 3,
++      "world_index": 13,
++      "world_seed": 4106575964
++    },
++    {
++      "basis_rotation_deg": 18.95820466478309,
++      "conductance_cv": 0.40012352725965616,
++      "delta_frozen": -0.30124068160776973,
++      "delta_shuffled": -0.30306185005797714,
++      "eigval_only_gain": -0.000938652350432112,
++      "eigvec_only_gain": -0.3102329742918366,
++      "initial_alignment": 0.9958425149919712,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 3.375,
++      "spectral_gap": 0.0025742683869980354,
++      "spectral_gap_ratio": 1.0026230590002638,
++      "tree_depth": 4,
++      "world_index": 14,
++      "world_seed": 3213209444
++    },
++    {
++      "basis_rotation_deg": 5.479349996572468,
++      "conductance_cv": 0.3500859990014888,
++      "delta_frozen": -0.003978434244375273,
++      "delta_shuffled": -0.002517628574414288,
++      "eigval_only_gain": 0.0007718537942112969,
++      "eigvec_only_gain": -0.004539140975134415,
++      "initial_alignment": 0.9968228465304536,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 2.875,
++      "spectral_gap": 0.006595230622897796,
++      "spectral_gap_ratio": 1.0067418615536203,
++      "tree_depth": 6,
++      "world_index": 15,
++      "world_seed": 2539776275
++    },
++    {
++      "basis_rotation_deg": 35.99703092690434,
++      "conductance_cv": 0.4238160872877227,
++      "delta_frozen": 0.0004547964276626626,
++      "delta_shuffled": -0.0019296714445543595,
++      "eigval_only_gain": 0.0025352936636873213,
++      "eigvec_only_gain": -0.001895377706293111,
++      "initial_alignment": 0.9954454307788163,
++      "max_port_sensor_dist": 5.0,
++      "mean_port_sensor_dist": 2.625,
++      "spectral_gap": 0.01443370590584614,
++      "spectral_gap_ratio": 1.0148893457695107,
++      "tree_depth": 3,
++      "world_index": 16,
++      "world_seed": 3114022784
++    },
++    {
++      "basis_rotation_deg": 5.912579032659802,
++      "conductance_cv": 0.5023474164195725,
++      "delta_frozen": -0.00010908783216934115,
++      "delta_shuffled": -0.002416709646152704,
++      "eigval_only_gain": 0.0008525531972547462,
++      "eigvec_only_gain": 0.0020744382240970305,
++      "initial_alignment": 0.993188506715933,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 3.5,
++      "spectral_gap": 0.014833760663881534,
++      "spectral_gap_ratio": 1.0152640494340646,
++      "tree_depth": 3,
++      "world_index": 17,
++      "world_seed": 1163372937
++    },
++    {
++      "basis_rotation_deg": 6.7179321203000075,
++      "conductance_cv": 0.4063412766940732,
++      "delta_frozen": 0.0007594320011076183,
++      "delta_shuffled": 0.0012681031829324674,
++      "eigval_only_gain": 0.00015949962510575233,
++      "eigvec_only_gain": 0.0015089619923464026,
++      "initial_alignment": 0.997990585242626,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 3.25,
++      "spectral_gap": 0.006599197803324963,
++      "spectral_gap_ratio": 1.0067381147536587,
++      "tree_depth": 4,
++      "world_index": 18,
++      "world_seed": 1243098431
++    },
++    {
++      "basis_rotation_deg": 11.374503787964667,
++      "conductance_cv": 0.4490429666660735,
++      "delta_frozen": -0.009666377259541448,
++      "delta_shuffled": -0.005486623424308057,
++      "eigval_only_gain": -0.00021787389462879503,
++      "eigvec_only_gain": -0.008925750341768679,
++      "initial_alignment": 0.9971679747520966,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 3.375,
++      "spectral_gap": 0.0020059128547931238,
++      "spectral_gap_ratio": 1.0020441489690946,
++      "tree_depth": 4,
++      "world_index": 19,
++      "world_seed": 2942441180
++    },
++    {
++      "basis_rotation_deg": 5.752076625709239,
++      "conductance_cv": 0.40786583096416223,
++      "delta_frozen": -0.00012591458407551492,
++      "delta_shuffled": -0.000546791604880914,
++      "eigval_only_gain": 0.00022174647761541433,
++      "eigvec_only_gain": -0.000137568308320013,
++      "initial_alignment": 0.9981576780365777,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 3.625,
++      "spectral_gap": 0.013224934608263017,
++      "spectral_gap_ratio": 1.013581618224968,
++      "tree_depth": 4,
++      "world_index": 20,
++      "world_seed": 3510175734
++    },
++    {
++      "basis_rotation_deg": 5.494675041640807,
++      "conductance_cv": 0.48049851497226387,
++      "delta_frozen": -0.010934796617139475,
++      "delta_shuffled": -0.011044813223731076,
++      "eigval_only_gain": 5.2622971260518625e-06,
++      "eigvec_only_gain": -0.019402442133438114,
++      "initial_alignment": 0.9719232931318972,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 3.25,
++      "spectral_gap": 0.006340009619219877,
++      "spectral_gap_ratio": 1.0064818647448788,
++      "tree_depth": 3,
++      "world_index": 21,
++      "world_seed": 246860598
++    },
++    {
++      "basis_rotation_deg": 9.010069714567361,
++      "conductance_cv": 0.4320877936197448,
++      "delta_frozen": 0.04266694735790766,
++      "delta_shuffled": -0.012506255120235621,
++      "eigval_only_gain": 0.04133674336628035,
++      "eigvec_only_gain": 0.0013916539415027573,
++      "initial_alignment": 0.5822750391267812,
++      "max_port_sensor_dist": 6.0,
++      "mean_port_sensor_dist": 3.0,
++      "spectral_gap": 0.0055157412560324914,
++      "spectral_gap_ratio": 1.0056373586865688,
++      "tree_depth": 3,
++      "world_index": 22,
++      "world_seed": 3559909381
++    },
++    {
++      "basis_rotation_deg": 20.402913864028644,
++      "conductance_cv": 0.48738973051167,
++      "delta_frozen": 0.006101855811632584,
++      "delta_shuffled": 0.026949761181367826,
++      "eigval_only_gain": 0.004537119817521251,
++      "eigvec_only_gain": 0.006757343075670219,
++      "initial_alignment": 0.9908644846356838,
++      "max_port_sensor_dist": 5.0,
++      "mean_port_sensor_dist": 3.0,
++      "spectral_gap": 0.010200286896886568,
++      "spectral_gap_ratio": 1.0104753941340547,
++      "tree_depth": 4,
++      "world_index": 23,
++      "world_seed": 1288421885
++    }
++  ]
++}
+diff --git a/tests/test_gate6b.py b/tests/test_gate6b.py
+new file mode 100644
+index 0000000..05aae65
+--- /dev/null
++++ b/tests/test_gate6b.py
+@@ -0,0 +1,118 @@
++import math
++from pathlib import Path
++import json
++
++import numpy as np
++
++from experiments.gate6b_feature_ranking import (
++    POST_ADAPTATION_FEATURES,
++    PRE_EXISTING_FEATURES,
++    _tree_distances,
++    run,
++)
++
++
++def _finite(value):
++    if isinstance(value, dict):
++        return all(_finite(v) for v in value.values())
++    if isinstance(value, (list, tuple)):
++        return all(_finite(v) for v in value)
++    if isinstance(value, str) or value is None or isinstance(value, bool):
++        return True
++    if isinstance(value, (int, float)):
++        return math.isfinite(value)
++    return False
++
++
++def test_tree_distances_on_a_known_path():
++    edges = np.array([[0, 1], [1, 2], [2, 3]])
++    distances = _tree_distances(4, edges)
++    assert distances[0][3] == 3
++    assert distances[1][3] == 2
++    assert distances[2][2] == 0
++
++
++def test_gate6b_six_world_smoke_is_deterministic_and_finite():
++    a = run(seed=17, n_worlds=6)
++    b = run(seed=17, n_worlds=6)
++    assert a == b
++    assert _finite(a)
++    assert a["gate"] == "6B"
++    assert a["seed"] == 17
++    assert a["n_worlds"] == 6
++    assert len(a["worlds"]) == 6
++
++
++def test_gate6b_rejects_too_few_worlds_for_correlation():
++    for n_worlds in (1, 2):
++        try:
++            run(seed=17, n_worlds=n_worlds)
++        except ValueError:
++            pass
++        else:
++            raise AssertionError("Gate 6B's correlation ranking must reject fewer than 3 worlds")
++
++
++def test_gate6b_feature_groups_are_disjoint_and_complete():
++    a = run(seed=17, n_worlds=6)
++    pre = set(a["feature_groups"]["pre_existing"])
++    post = set(a["feature_groups"]["post_adaptation"])
++    assert pre == set(PRE_EXISTING_FEATURES)
++    assert post == set(POST_ADAPTATION_FEATURES)
++    assert pre.isdisjoint(post)
++
++
++def test_gate6b_r2_values_are_bounded():
++    a = run(seed=17, n_worlds=6)
++    for block in a["single_feature_r2"].values():
++        for value in block.values():
++            assert 0.0 <= value <= 1.0 + 1e-9
++    assert 0.0 <= a["best_pre_existing_pair_vs_delta_frozen"]["r2"] <= 1.0 + 1e-9
++
++
++def test_gate6b_world_rows_are_within_expected_ranges():
++    a = run(seed=17, n_worlds=3)
++    for world in a["worlds"]:
++        assert -1.0 <= world["delta_frozen"] <= 1.0
++        assert -1.0 <= world["delta_shuffled"] <= 1.0
++        assert 0.0 <= world["initial_alignment"] <= 1.0
++        assert world["tree_depth"] >= 1
++        assert world["spectral_gap"] >= 0.0
++        assert world["conductance_cv"] >= 0.0
++        assert world["basis_rotation_deg"] >= 0.0
++
++
++def test_gate6b_mechanism_summary_sign_match_counts_are_bounded():
++    a = run(seed=17, n_worlds=5)
++    summary = a["mechanism_summary"]
++    assert 0 <= summary["eigvec_sign_matches_delta_frozen"] <= 5
++    assert 0 <= summary["eigval_sign_matches_delta_frozen"] <= 5
++    assert summary["n_worlds_scored"] == 5
++
++
++def test_gate6b_rejects_world_count_outside_predeclared_suite():
++    for n_worlds in (0, 25):
++        try:
++            run(seed=17, n_worlds=n_worlds)
++        except ValueError:
++            pass
++        else:
++            raise AssertionError("Gate 6B must enforce 1 <= n_worlds <= 24")
++
++
++def test_gate6b_frozen_receipt_reproduces_gate6_exactly():
++    receipt = json.loads(Path("results/gate6b.json").read_text(encoding="utf-8"))
++    assert receipt["n_worlds"] == 24
++    reproduction = receipt["reproduces_gate6_receipt"]
++    assert reproduction["max_mismatch_delta_frozen"] == 0.0
++    assert reproduction["max_mismatch_delta_shuffled"] == 0.0
++
++
++def test_gate6b_frozen_receipt_headline_numbers():
++    receipt = json.loads(Path("results/gate6b.json").read_text(encoding="utf-8"))
++    frozen_r2 = receipt["single_feature_r2"]["post_adaptation_vs_delta_frozen"]
++    assert frozen_r2["eigvec_only_gain"] > frozen_r2["eigval_only_gain"]
++    pre_r2 = receipt["single_feature_r2"]["pre_existing_vs_delta_frozen"]
++    assert pre_r2["initial_alignment"] == max(pre_r2.values())
++    summary = receipt["mechanism_summary"]
++    assert summary["eigvec_sign_matches_delta_frozen"] > summary["eigval_sign_matches_delta_frozen"]
+-- 
+2.43.0
+
