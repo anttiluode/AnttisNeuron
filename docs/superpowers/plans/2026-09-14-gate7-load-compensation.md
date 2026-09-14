@@ -1,253 +1,115 @@
 # Gate 7 Load Compensation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** use `superpowers:executing-plans` or subagent-driven development, with TDD and explicit RED/GREEN checkpoints.
 
-**Goal:** Add a falsifiable Gate 7 experiment testing whether a purely local AIS-like firing-rate homeostat can preserve a nontrivial input-output transfer function across the 24 existing dendritic worlds better than a fixed boundary, with a closed-form load-ratio oracle as a diagnostic reference.
+**Goal:** Test whether a purely local AIS-like rate homeostat can preserve a nontrivial somatic-current→output transfer function across the 24 existing frozen dendritic worlds better than a fixed output boundary.
 
-**Architecture:** Keep Gate 6 numerically unchanged and reuse its deterministic world generation plus local dendritic adaptation. Add `anttis_neuron/output_boundary.py` for electrical-load and output-boundary primitives, then `experiments/gate7_load_compensation.py` for the fixed/homeostatic/oracle assay. Gate 7 probes every frozen dendritic world with the same input distribution so differences are not confounded by different covariance families.
+**Corrected architecture:** Gate 7 now probes **somatic driving-point load directly**. Reproduce each world's Gate-6 local-adapted conductances, freeze them, inject deterministic steady somatic current at node `0`, compute `v_soma = I/g_load`, and compare fixed/local/oracle output-boundary gains. The load-ratio oracle is therefore exactly matched to the measured transfer problem. The 24-world scientific receipt has not yet run.
 
-**Tech Stack:** Python 3.11/3.12, NumPy, pytest, GitHub Actions.
+**Tech stack:** Python 3.11/3.12, NumPy, pytest, GitHub Actions.
 
 **Spec:** `docs/superpowers/specs/2026-09-14-gate7-load-compensation-design.md`
 
-## Global Constraints
+## Frozen protocol
 
-- Reuse the 24 deterministic Gate-6 `CableWorld` instances; do not change `results/gate6.json` or Gate-6 numerical behavior.
-- Reproduce the Gate-6 local dendritic adaptation, then freeze dendritic conductances before output-boundary adaptation.
-- Treat node `0` as the soma/output-boundary interface.
-- Gate-7 calibration seed: `SeedSequence([7017, world.seed, world.index])`; evaluation seed: `SeedSequence([8017, world.seed, world.index])`.
-- Calibration tape length: `3000`; evaluation base tape length: `5000`; cable burn-in: `250`.
-- Every Gate-7 tape is sampled from the same `N(0, I_4)` distribution; only the deterministic sample realization changes by world seed. Gate 7 therefore tests the frozen physical substrates under matched probe statistics rather than re-testing the Gate-6 covariance families.
-- Reference world: world `0`; reference target rate: `0.25`; `beta = 2 / soma_voltage_std`; calibrate `theta` by deterministic bisection at unit input scale.
-- Fixed boundary gain: `a = 1`.
-- Homeostat: 12 phases, `log(a) += 0.5 * (0.25 - mean_rate)`, clipped to `a in [0.2, 5.0]`; its function interface contains only mean rate, target rate, and current gain.
-- Oracle: `a_oracle = g_load(world) / g_load(reference)`, unclipped.
-- Evaluation scales: exactly `(0.50, 0.75, 1.00, 1.25, 1.50)`.
-- Rheobase analogue threshold: `0.10`; F-I gain uses least-squares slope at `(0.75, 1.00, 1.25)`.
-- Reference transfer-curve dynamic range must be at least `0.10`.
-- Unit-scale rates `<0.02` or `>0.98` are flagged collapsed but remain in aggregates.
-- No scientific-positive result is encoded as a correctness test.
+- Reuse the 24 deterministic Gate-6 `CableWorld` instances and exact Gate-6 local dendritic training.
+- Do not modify `results/gate6.json` or Gate-6 numerical behavior.
+- Soma/output interface: node `0`.
+- Continuous conductance matrix: `G = leak*I + coupling*L(g)`.
+- Driving-point load: Schur complement at node `0`.
+- Somatic steady voltage: `v(I) = I/g_load`.
+- Reference world: world `0`.
+- Reference target rate: `r*=0.25`.
+- Reference unit-current voltage: `v*=1/g_load_ref`.
+- Output slope: `beta = 4/v*`.
+- Threshold: `theta = v* - logit(0.25)/beta`.
+- Fixed gain: `a=1`.
+- Homeostat: 12 phases at `I=1`, `log(a) += 0.5*(0.25-r)`, clipped to `[0.2,5.0]`.
+- Homeostat inputs: current gain, current output rate, target rate only.
+- Oracle gain: `a_oracle = g_load(world)/g_load(reference)`, unclipped.
+- Evaluation currents: exactly `(0.50,0.75,1.00,1.25,1.50)`.
+- Rheobase analogue threshold: `0.10`.
+- F-I gain: least-squares slope through `(0.75,1.00,1.25)`.
+- Reference curve dynamic range must be at least `0.10`.
+- Unit-current rate `<0.02` or `>0.98` is flagged collapsed and retained.
+- No positive local-homeostasis result is encoded as a correctness test.
 
 ---
 
-### Task 1: Output-boundary primitives
+## Task 1 — Preserve completed primitive work and add steady-state voltage invariant
+
+**Existing completed work:** `anttis_neuron/output_boundary.py` and `tests/test_output_boundary.py` already have RED→GREEN coverage for Schur-complement load, bounded logistic rate, threshold calibration, local gain update, and transfer metrics.
 
 **Files:**
-- Create: `anttis_neuron/output_boundary.py`
-- Create: `tests/test_output_boundary.py`
+- Modify: `anttis_neuron/output_boundary.py`
+- Modify: `tests/test_output_boundary.py`
 
-**Interfaces:**
-- Consumes: `anttis_neuron.cable.weighted_laplacian` and NumPy arrays.
-- Produces:
-  - `driving_point_conductance(n_nodes, edges, conductances, *, leak, coupling, soma_node=0) -> float`
-  - `rate_boundary(voltage, *, gain, theta, beta) -> np.ndarray`
-  - `calibrate_threshold(voltage, *, gain, beta, target_rate, iterations=80) -> float`
-  - `homeostatic_gain(gain, mean_rate, *, target_rate=0.25, eta=0.5, gain_min=0.2, gain_max=5.0) -> float`
-  - `transfer_metrics(scales, rates, reference_rates, *, rheobase_rate=0.10) -> dict`
-
-- [ ] **Step 1: Write failing primitive tests**
-
-Create `tests/test_output_boundary.py` with a two-node graph Schur-complement test, bounded finite logistic-rate test, deterministic threshold-calibration test, homeostatic direction/bounds tests, and transfer-metric tests.
-
-```python
-import math
-import numpy as np
-from anttis_neuron.output_boundary import (
-    calibrate_threshold, driving_point_conductance,
-    homeostatic_gain, rate_boundary, transfer_metrics,
-)
-
-
-def test_two_node_load_matches_schur_complement():
-    edges = np.array([[0, 1]], dtype=int)
-    g = np.array([2.0])
-    got = driving_point_conductance(2, edges, g, leak=0.08, coupling=0.65)
-    diag = 0.08 + 0.65 * 2.0
-    off = -0.65 * 2.0
-    expected = diag - off * off / diag
-    assert math.isclose(got, expected, rel_tol=0.0, abs_tol=1e-12)
-    assert got > 0.0
-
-
-def test_threshold_calibration_hits_target_rate():
-    voltage = np.linspace(-1.0, 1.0, 2001)
-    theta = calibrate_threshold(voltage, gain=1.0, beta=2.0, target_rate=0.25)
-    rate = rate_boundary(voltage, gain=1.0, theta=theta, beta=2.0)
-    assert abs(float(np.mean(rate)) - 0.25) < 1e-10
-```
-
-- [ ] **Step 2: Verify RED**
-
-Run: `pytest -q tests/test_output_boundary.py`
-Expected: collection fails because `anttis_neuron.output_boundary` does not exist.
-
-- [ ] **Step 3: Implement primitives minimally**
-
-Construct `G = leak*I + coupling*weighted_laplacian(...)`. Compute the Schur complement with `np.linalg.solve`, never an explicit inverse. Use a clipped logistic exponent, 80-step deterministic bisection, and log-space gain clipping.
-
-```python
-rest = np.array([i for i in range(n_nodes) if i != soma_node], dtype=int)
-load = float(G[soma_node, soma_node]) - float(
-    G[soma_node, rest] @ np.linalg.solve(G[np.ix_(rest, rest)], G[rest, soma_node])
-)
-z = np.clip(beta * (gain * voltage - theta), -60.0, 60.0)
-rates = 1.0 / (1.0 + np.exp(-z))
-log_gain = np.log(gain) + eta * (target_rate - mean_rate)
-new_gain = float(np.exp(np.clip(log_gain, np.log(gain_min), np.log(gain_max))))
-```
-
-`transfer_metrics` returns curve RMSE, rheobase (linear interpolation, otherwise `None`), central three-point least-squares F-I slope, and unit-scale rate.
-
-- [ ] **Step 4: Verify GREEN**
-
-Run: `pytest -q tests/test_output_boundary.py`
-Expected: all tests pass.
-
-- [ ] **Step 5: Commit**
-
-Commit: `feat: add AIS-like output boundary primitives`.
+- [ ] Add a failing test for `steady_state_soma_voltage(current, load)` (or equivalent exact helper): positive finite load required; scalar/vector current supported; result equals `current/load` exactly within floating tolerance.
+- [ ] Add a two-node/direct-solve test showing the Schur-complement load gives the same soma voltage as `np.linalg.solve(G, I*e0)[0]`.
+- [ ] Verify RED.
+- [ ] Implement the minimal helper/validation.
+- [ ] Verify focused GREEN.
+- [ ] Commit: `fix: align Gate 7 primitives with somatic load assay`.
 
 ---
 
-### Task 2: Expose Gate-6 trained conductances without changing Gate 6
+## Task 2 — Preserve completed Gate-6 helper work
+
+`trained_world_conductances(world, tape_seed=...)` is already implemented by TDD. Do not route existing Gate-6 `run_world()` through it. Keep the frozen receipt identity test and verify full Gate 6 remains unchanged before final integration.
+
+---
+
+## Task 3 — Replace the rejected distal-tape Gate-7 protocol
 
 **Files:**
-- Modify: `experiments/gate6_many_worlds.py`
-- Modify: `tests/test_gate6.py`
+- Modify: `experiments/gate7_load_compensation.py`
+- Replace/update: `tests/test_gate7.py`
+- Delete after incorporating evidence: `tests/test_gate7_diagnostic.py`
 
-**Interfaces:**
-- Produces: `trained_world_conductances(world: CableWorld, *, tape_seed: int) -> dict[str, np.ndarray]`.
-
-- [ ] **Step 1: Add failing regression/helper tests**
-
-Pin the committed Gate-6 receipt metadata/aggregate and import the not-yet-existing helper. Require keys `frozen/local/shuffled/uniform`, one conductance per edge, and uniform byte-identical to frozen.
-
-- [ ] **Step 2: Verify RED**
-
-Run: `pytest -q tests/test_gate6.py`
-Expected: helper import/call fails.
-
-- [ ] **Step 3: Implement helper only**
-
-```python
-def trained_world_conductances(world: CableWorld, *, tape_seed: int) -> dict[str, np.ndarray]:
-    adaptation_tapes, _ = _make_world_tapes(world, tape_seed)
-    q_target = _initial_q_target(world, adaptation_tapes[0])
-    trained, _ = _train_conditions(world, adaptation_tapes, q_target=q_target, seed=tape_seed)
-    return {name: values.copy() for name, values in trained.items()}
-```
-
-Do not refactor `run_world` unless the full Gate-6 receipt remains byte-identical.
-
-- [ ] **Step 4: Verify Gate 6 is unchanged**
-
-Run: `pytest -q tests/test_gate6.py`
-Run: `python experiments/gate6_many_worlds.py --worlds 24 --out /tmp/gate6.json && cmp /tmp/gate6.json results/gate6.json`
-Expected: tests pass and `cmp` exits 0.
-
-- [ ] **Step 5: Commit**
-
-Commit: `refactor: expose frozen Gate 6 conductance training`.
+- [ ] Rewrite Gate-7 tests first so they no longer reference random tapes, cable burn-in, distal ports, or stochastic voltage calibration.
+- [ ] New tests require:
+  - reference analytic calibration gives exactly rate `0.25` at unit current;
+  - reference five-current curve has dynamic range `>=0.10`;
+  - per-world load is positive finite;
+  - direct-solve and Schur-complement voltage agree;
+  - fixed and local gains both start at `1.0`;
+  - oracle gain equals exact load ratio;
+  - oracle five-point curve equals reference five-point curve to numerical precision;
+  - homeostat function signature exposes no load/topology/conductance/spectral inputs;
+  - all condition rates are finite and in `[0,1]`;
+  - no assertion requires local homeostasis to improve the science metric.
+- [ ] Verify RED against the rejected distal-tape implementation.
+- [ ] Replace the scientific protocol with deterministic somatic-current evaluation.
+- [ ] Reference calibration uses only world `0` load and the analytic formulas in the spec.
+- [ ] Local homeostasis runs exactly 12 unit-current phases.
+- [ ] Per-world receipt includes world IDs/topology, load/reference load/load ratio, fixed/local/oracle gains, five rate curves, transfer metrics, collapse flags, `fixed_rmse-homeostatic_rmse`, and oracle numerical error.
+- [ ] Delete the temporary diagnostic test once corrected tests encode the discovered root cause.
+- [ ] Verify focused GREEN.
+- [ ] Commit: `fix: probe somatic load directly in Gate 7`.
 
 ---
 
-### Task 3: Gate-7 single-world protocol
-
-**Files:**
-- Create: `experiments/gate7_load_compensation.py`
-- Create: `tests/test_gate7.py`
-
-**Interfaces:**
-- Produces:
-  - `_make_gate7_tapes(world) -> tuple[np.ndarray, np.ndarray]`
-  - `_soma_voltage(world, conductances, tape, scale=1.0) -> np.ndarray`
-  - `_reference_parameters(reference_world, reference_g) -> dict`
-  - `_adapt_homeostatic_gain(calibration_voltage, *, theta, beta, target_rate) -> float`
-  - `run_world(world, *, reference) -> dict`
-
-- [ ] **Step 1: Write failing two-world tests**
-
-Require deterministic calibration/evaluation tape digests, `N(0,I_4)` sample shape/finite values, identical held-out base tape across fixed/homeostatic/oracle conditions within a world, fixed and local gains starting at `1.0`, exact oracle load ratio, five frozen scales, bounded finite rates, and no positive-outcome assertion. Use `inspect.signature(homeostatic_gain)` to ensure there is no load/topology/conductance/spectral argument.
-
-- [ ] **Step 2: Verify RED**
-
-Run: `pytest -q tests/test_gate7.py`
-Expected: collection fails because `experiments.gate7_load_compensation` does not exist.
-
-- [ ] **Step 3: Implement matched-distribution tapes and soma extraction**
-
-```python
-cal_rng = np.random.default_rng(np.random.SeedSequence([7017, world.seed, world.index]))
-eval_rng = np.random.default_rng(np.random.SeedSequence([8017, world.seed, world.index]))
-calibration = cal_rng.standard_normal((3000, 4))
-evaluation = eval_rng.standard_normal((5000, 4))
-```
-
-Build the cable operator from the frozen local Gate-6 conductances. Use `port_sensor_matrices(world)` for `B`; call `simulate_cable(..., return_states=True, burn=250)` and return full-state column `0`. The observation matrix exists only to satisfy the existing simulator interface and is not used by the output boundary.
-
-- [ ] **Step 4: Implement reference and three conditions**
-
-World 0 calibrates `beta`, `theta`, target rate, reference load, and reference fixed-boundary transfer curve. Each world evaluates fixed gain `1.0`, 12-phase local homeostasis, and unclipped oracle load ratio on the same held-out base tape at scales `(0.5,0.75,1.0,1.25,1.5)`.
-
-- [ ] **Step 5: Record complete per-world receipt fields**
-
-Include world/seed/topology identifiers, load/reference load, calibration/evaluation tape digests, fixed/local starting gains, final three gains, three five-rate curves, three metric dictionaries, collapse flags, and `fixed_rmse - homeostatic_rmse` / `fixed_rmse - oracle_rmse`.
-
-- [ ] **Step 6: Verify GREEN**
-
-Run: `pytest -q tests/test_output_boundary.py tests/test_gate6.py tests/test_gate7.py`
-Expected: all pass.
-
-- [ ] **Step 7: Commit**
-
-Commit: `feat: add Gate 7 load compensation protocol`.
-
----
-
-### Task 4: 24-world aggregate and frozen receipt
+## Task 4 — 24-world aggregate and frozen scientific receipt
 
 **Files:**
 - Modify: `experiments/gate7_load_compensation.py`
 - Modify: `tests/test_gate7.py`
 - Create: `results/gate7.json`
 
-**Interfaces:**
-- Produces: `run(seed: int = 17, n_worlds: int = 24) -> dict` and CLI `--seed/--worlds/--out`.
-
-- [ ] **Step 1: Write failing aggregate tests**
-
-Require `1 <= n_worlds <= 24`, deterministic two-world equality, reference world retained but excluded from delta summaries, distribution summaries for both deltas, per-condition RMSE/rate/F-I/rheobase dispersion and collapse counts, and descriptive load-error / learned-oracle correlations.
-
-- [ ] **Step 2: Verify RED**
-
-Run: `pytest -q tests/test_gate7.py`
-Expected: aggregate interface/keys missing.
-
-- [ ] **Step 3: Implement aggregate/CLI**
-
-Finite rheobases contribute to rheobase SD; missing count is reported separately. Pearson correlation is `None` for zero-variance inputs. Interpretation explicitly says synthetic and states that the homeostat cannot read load.
-
-- [ ] **Step 4: Verify two-world GREEN**
-
-Run: `pytest -q tests/test_gate7.py`
-Expected: all pass.
-
-- [ ] **Step 5: Run the predeclared 24-world assay once**
-
-Run: `python experiments/gate7_load_compensation.py --seed 17 --worlds 24 --out results/gate7.json`
-After this command, do not alter frozen scientific constants in response to the result.
-
-- [ ] **Step 6: Add receipt identity regression**
-
-On the reference Python 3.11 runner require regenerated 24-world JSON to equal the committed receipt. Cross-version engineering tests use invariant/tolerance checks rather than changing scientific values for bit identity.
-
-- [ ] **Step 7: Commit**
-
-Commit: `science: freeze Gate 7 load compensation receipt`.
+- [ ] Add aggregate tests first.
+- [ ] Require `1 <= n_worlds <= 24`, deterministic two-world equality, world `0` retained but excluded from local-delta summary, local delta mean/median/q25/min/win fraction, per-condition RMSE and operating-rate summaries, collapse counts, finite-rheobase dispersion/missing count, F-I dispersion, and descriptive load-ratio↔learned-gain correlation.
+- [ ] Require oracle RMSE max to stay within numerical tolerance; this is an engineering identity control, not a scientific-positive assertion.
+- [ ] Verify RED.
+- [ ] Implement aggregate and CLI.
+- [ ] Verify two-world GREEN.
+- [ ] Run the predeclared 24-world assay **once**: `python experiments/gate7_load_compensation.py --seed 17 --worlds 24 --out results/gate7.json`.
+- [ ] After the 24-world result exists, do not alter frozen scientific constants to improve the outcome.
+- [ ] Add Python-3.11 receipt identity regression.
+- [ ] Commit: `science: freeze Gate 7 somatic load receipt`.
 
 ---
 
-### Task 5: CI and public interpretation
+## Task 5 — CI and public interpretation
 
 **Files:**
 - Modify: `.github/workflows/ci.yml`
@@ -256,30 +118,25 @@ Commit: `science: freeze Gate 7 load compensation receipt`.
 - Modify: `index.html`
 - Modify: `tests/test_index_html.py`
 
-- [ ] **Step 1: Write failing page expectations**
+- [ ] Add/extend failing page expectations for `Gate 7`, `load compensation`, `somatic current`, and explicit wording that the AIS/output-boundary model is synthetic.
+- [ ] Add Gate-7 two-world smoke to Python 3.11/3.12 CI.
+- [ ] Add full 24-world Gate-7 receipt verification only on Python 3.11, alongside the existing Gate-6 verification.
+- [ ] Update README/PAPER/index from the actual frozen result, whether positive, null, or negative.
+- [ ] Explain the pre-assay correction plainly: the first draft mixed distal transfer with a somatic-load oracle; no 24-world Gate-7 result existed before correction.
+- [ ] Keep biological claims as motivation/constraints only.
+- [ ] Preserve the two independent follow-ups: 24×24 shape-as-signal fingerprint matrix and temporal/path-length matching.
+- [ ] Commit: `docs: report Gate 7 somatic load result`.
 
-Require `Gate 7`, `load compensation`, and wording that the AIS/output-boundary model is a synthetic surrogate, while retaining the previous anti-overclaiming checks.
+---
 
-- [ ] **Step 2: Update CI**
+## Task 6 — Fresh verification, review, PR, integration
 
-Run engineering tests and Gate-7 two-world smoke on Python 3.11/3.12. Run full 24-world Gate-7 receipt verification only on Python 3.11, alongside existing full Gate 6.
-
-- [ ] **Step 3: Update README/PAPER/index from the frozen result**
-
-Report fixed/homeostatic/oracle outcomes exactly, whether positive, null, or negative. Biological papers are motivation/constraints only. Preserve the next independent hypotheses: (a) 24x24 shape-as-signal fingerprint matrix plus spectral-gap analysis, and (b) temporal/path-length matching inspired by recursive filtering, gamma-phase arrival efficacy, and predominantly time-yoked auditory integration.
-
-- [ ] **Step 4: Commit documentation/CI**
-
-Commit: `docs: report Gate 7 load compensation result`.
-
-- [ ] **Step 5: Run fresh full verification**
-
-Run: `pytest -q`
-Run the existing Gates 0-5B smoke commands.
-Run: `python experiments/gate6_many_worlds.py --worlds 24 --out /tmp/gate6.json && cmp /tmp/gate6.json results/gate6.json`
-Run: `python experiments/gate7_load_compensation.py --worlds 24 --out /tmp/gate7.json && cmp /tmp/gate7.json results/gate7.json`
-Expected: all engineering tests pass and both reference receipts reproduce exactly on Python 3.11.
-
-- [ ] **Step 6: Open PR and verify exact head**
-
-Create a PR from `study/gate7-load-compensation` to `main`, mark it ready, and wait for the exact-head Python 3.11/3.12 checks. Do not merge on an older green parent.
+- [ ] Run full `pytest -q` on the exact final head.
+- [ ] Run existing Gates 0–5B smoke commands.
+- [ ] Regenerate Gate 6 on Python 3.11 and compare byte-for-byte with `results/gate6.json`.
+- [ ] Regenerate Gate 7 on Python 3.11 and compare byte-for-byte with `results/gate7.json`.
+- [ ] Use `superpowers:verification-before-completion` before any completion claim.
+- [ ] Use `superpowers:requesting-code-review` / inspect PR patch for scientific leakage or overclaiming.
+- [ ] Open PR from `study/gate7-load-compensation` to `main`.
+- [ ] Wait for exact-head Python 3.11/3.12 checks; do not merge on an older green parent.
+- [ ] Use `superpowers:finishing-a-development-branch` for integration. User has already authorized continuing repo work, but exact-head green verification remains mandatory.
