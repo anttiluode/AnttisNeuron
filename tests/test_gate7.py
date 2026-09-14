@@ -9,6 +9,7 @@ from experiments.gate6_many_worlds import trained_world_conductances
 from experiments.gate7_load_compensation import (
     CURRENTS,
     _reference_parameters,
+    run,
     run_world,
 )
 
@@ -115,3 +116,61 @@ def test_gate7_reference_world_oracle_and_fixed_are_identical():
     oracle = np.asarray(result["oracle"]["rates"], dtype=float)
     assert math.isclose(result["oracle_gain"], 1.0, rel_tol=0.0, abs_tol=1e-15)
     assert np.allclose(fixed, oracle, rtol=0.0, atol=2e-14)
+
+
+def test_gate7_one_world_run_is_deterministic_and_has_no_nonreference_delta():
+    first = run(seed=17, n_worlds=1)
+    second = run(seed=17, n_worlds=1)
+    assert first == second
+    assert first["gate"] == 7
+    assert first["seed"] == 17
+    assert first["n_worlds"] == 1
+    assert first["currents"] == [0.5, 0.75, 1.0, 1.25, 1.5]
+    assert len(first["worlds"]) == 1
+    assert first["worlds"][0]["world_index"] == 0
+    for key in (
+        "homeostatic_delta_mean",
+        "homeostatic_delta_median",
+        "homeostatic_delta_q25",
+        "homeostatic_delta_min",
+        "homeostatic_beats_fixed_fraction",
+    ):
+        assert first["aggregate"][key] is None
+
+
+def test_gate7_two_world_aggregate_reports_engineering_and_science_without_positive_requirement():
+    result = run(seed=17, n_worlds=2)
+    assert result["n_worlds"] == 2
+    assert [world["world_index"] for world in result["worlds"]] == [0, 1]
+    aggregate = result["aggregate"]
+
+    for condition in ("fixed", "homeostatic", "oracle"):
+        for suffix in ("curve_rmse_mean", "curve_rmse_median", "curve_rmse_q75"):
+            assert aggregate[f"{condition}_{suffix}"] >= 0.0
+        assert 0.0 <= aggregate[f"{condition}_unit_rate_mean"] <= 1.0
+        assert aggregate[f"{condition}_unit_rate_std"] >= 0.0
+        assert aggregate[f"{condition}_fi_gain_std"] >= 0.0
+        assert aggregate[f"{condition}_rheobase_missing_count"] in (0, 1, 2)
+        rheobase_std = aggregate[f"{condition}_rheobase_std"]
+        assert rheobase_std is None or rheobase_std >= 0.0
+        assert 0 <= aggregate[f"{condition}_collapse_count"] <= 2
+
+    assert aggregate["oracle_curve_rmse_max"] < 2e-14
+    assert aggregate["oracle_numerical_error_max"] < 2e-14
+    assert -1.0 <= aggregate["homeostatic_delta_mean"] <= 1.0
+    assert -1.0 <= aggregate["homeostatic_delta_median"] <= 1.0
+    assert -1.0 <= aggregate["homeostatic_delta_q25"] <= 1.0
+    assert -1.0 <= aggregate["homeostatic_delta_min"] <= 1.0
+    assert 0.0 <= aggregate["homeostatic_beats_fixed_fraction"] <= 1.0
+    corr = aggregate["load_ratio_vs_homeostatic_gain_correlation"]
+    assert corr is None or -1.0 <= corr <= 1.0
+
+
+def test_gate7_rejects_world_count_outside_predeclared_suite():
+    for n_worlds in (0, 25):
+        try:
+            run(seed=17, n_worlds=n_worlds)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Gate 7 must enforce 1 <= n_worlds <= 24")
