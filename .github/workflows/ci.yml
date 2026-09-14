@@ -4,9 +4,6 @@ on:
   push:
   pull_request:
 
-permissions:
-  contents: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -31,17 +28,6 @@ jobs:
           python experiments/gate4_alignment.py --out /tmp/gate4.json
           python experiments/gate5_adaptive_cable.py --out /tmp/gate5.json
           python experiments/gate5b_spectral_audit.py --out /tmp/gate5b.json
-      - name: Freeze Gate 6 24-world receipt
+      - name: Gate 6 many-world verification
         if: matrix.python-version == '3.11'
         run: python experiments/gate6_many_worlds.py --worlds 24 --out /tmp/gate6.json
-      - name: Commit exact Gate 6 receipt
-        if: matrix.python-version == '3.11' && github.event_name == 'push' && github.ref == 'refs/heads/study/gate5b-gate6-worlds'
-        run: |
-          cp /tmp/gate6.json results/gate6.json
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/gate6.json
-          if ! git diff --cached --quiet; then
-            git commit -m "exp: freeze Gate 6 many-world receipt [skip ci]"
-            git push
-          fi
