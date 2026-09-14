@@ -64,19 +64,19 @@ AIS trigger boundary
 spike / no spike
 ```
 
-Each stage has a short plain-English explanation and a status tag.
+Each stage has a short plain-English explanation and one of the four site status tags: `prior work`, `exact`, `synthetic`, or `open`.
 
 ### Stage 1 — incoming statistics
 
 Plain English: repeated structure in the world produces recurring patterns in local input.
 
-Status: conceptual input to the model.
+Status: `open` — this is the conceptual input side of the proposed model rather than a claim that AnttisNeuron has modeled a full sensory pathway.
 
 ### Stage 2 — synapses / Oja learning
 
 Plain English: a population of synaptic weights can adapt toward a dominant covariance direction rather than selecting one physical input wire.
 
-Status: prior work plus an executable sanity check in AnttisNeuron.
+Status: `prior work` plus an executable sanity check in AnttisNeuron.
 
 Do not describe one isolated synapse as independently performing PCA.
 
@@ -84,7 +84,7 @@ Do not describe one isolated synapse as independently performing PCA.
 
 Plain English: physical branch dynamics can preserve some components longer than others and reshape the statistics that remain observable.
 
-Status: exact/synthetic result in the repository; biological eigenmode-growth claim remains open.
+Status: `synthetic`; the biological eigenmode-growth claim remains `open`.
 
 Do not state that real dendrites are known to grow toward covariance eigenmodes.
 
@@ -92,25 +92,25 @@ Do not state that real dendrites are known to grow toward covariance eigenmodes.
 
 Plain English: nonlinearity before pooling creates genuine hidden computational subunits. Without it, static linear branches collapse to one effective linear filter.
 
-Status: exact identity plus prior biological motivation.
+Status: `exact` for the algebraic collapse/equivalence; biological dendritic nonlinearity itself is `prior work`.
 
 ### Stage 5 — soma / load
 
 Plain English: branch events arrive through the physical cable with geometry-dependent transfer and jointly create the electrical state presented to the trigger zone.
 
-Status: standard cable/circuit interpretation; explicit AIS/load model is not yet implemented in AnttisNeuron.
+Status: `open` in AnttisNeuron v1 because explicit soma/AIS load coupling has not yet been implemented; the general cable/circuit interpretation is prior work.
 
 ### Stage 6 — AIS trigger
 
 Plain English: the axon initial segment is a stateful regenerative trigger region, not merely a memoryless ReLU. The public site may use the phrase “analog-to-event boundary” rather than “digital transistor”.
 
-Status: established biological role of the AIS; explicit AnttisNeuron AIS dynamics are future work.
+Status: `prior work` for the AIS's established biological role; explicit AnttisNeuron AIS dynamics remain `open`.
 
 ### Stage 7 — spike
 
 Plain English: the continuous internal state becomes a discrete event that travels down the axon.
 
-Status: established biology.
+Status: `prior work`.
 
 ## Information architecture
 
@@ -209,7 +209,7 @@ Two adjacent panels:
 - machine-readable receipts;
 - explicit negative claims and open questions.
 
-This section may link to the video if a canonical video URL is added later, but v1 must not require a video URL to build or deploy. The site should include a visually styled placeholder line `Video link can be added here` only if no URL exists in repository metadata at implementation time.
+This section may link to the video if a canonical video URL is present in repository metadata at implementation time. If there is no canonical URL, v1 simply omits the video button rather than displaying an empty placeholder.
 
 ### 5. Next falsifications
 
@@ -309,17 +309,19 @@ Do not publish internal `docs/superpowers/` content as part of the Pages artifac
 
 ## Deployment
 
-Use GitHub Actions Pages deployment.
+Use GitHub Actions Pages deployment triggered on pushes to `main` and manual `workflow_dispatch`.
 
 Workflow responsibilities:
 
 1. check out the repository;
-2. run the existing Python test suite or depend on the repository CI branch protection if GitHub prevents duplicate work;
-3. create a temporary Pages artifact directory;
-4. copy `site/*` into its root;
-5. copy only the required result receipts into `results/`;
-6. upload the Pages artifact;
-7. deploy with the official GitHub Pages action.
+2. set up Python and install the project with test dependencies;
+3. run `pytest -q` so publication is blocked by repository or site test failures;
+4. run `actions/configure-pages`;
+5. create a temporary Pages artifact directory;
+6. copy `site/*` into its root;
+7. copy only `results/gate2.json`, `results/gate4.json`, and `results/gate5.json` into `results/`;
+8. upload the artifact with `actions/upload-pages-artifact`;
+9. deploy with `actions/deploy-pages` using the required Pages permissions/environment.
 
 The site must work when hosted under the repository path `/AnttisNeuron/`, so all internal asset and receipt paths must be relative rather than root-absolute.
 
