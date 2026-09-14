@@ -93,8 +93,12 @@ def _train_conditions(
     n_edges = len(world.edges)
     local_g = np.ones(n_edges, dtype=float)
     shuffled_g = np.ones(n_edges, dtype=float)
-    uniform_g = np.ones(n_edges, dtype=float)
     frozen_g = np.ones(n_edges, dtype=float)
+    # A spatially uniform multiplicative conductance update followed by exact
+    # mean-conductance normalization has no relative structural degree of
+    # freedom. Keep this control byte-identical to frozen instead of allowing
+    # floating-point rescale noise to perturb a degenerate eigenspace.
+    uniform_g = frozen_g.copy()
     shuffle_rng = np.random.default_rng(np.random.SeedSequence([seed, world.seed, 1000]))
     multiset_errors: list[float] = []
 
@@ -120,9 +124,6 @@ def _train_conditions(
             float(np.max(np.abs(np.sort(local_signal) - np.sort(shuffled_signal))))
         )
         shuffled_g = _apply_signal(shuffled_g, shuffled_signal)
-
-        uniform_signal = np.full_like(local_signal, float(np.mean(local_signal)))
-        uniform_g = _apply_signal(uniform_g, uniform_signal)
 
     return {
         "frozen": frozen_g,
