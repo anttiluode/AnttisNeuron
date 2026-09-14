@@ -39,4 +39,6 @@ jobs:
         if: matrix.python-version == '3.11'
         run: |
           python experiments/gate7_load_compensation.py --seed 17 --worlds 24 --out /tmp/gate7.json
+          sha256sum results/gate7.json /tmp/gate7.json
+          diff -u results/gate7.json /tmp/gate7.json || true
           cmp /tmp/gate7.json results/gate7.json
