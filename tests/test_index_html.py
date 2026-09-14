@@ -26,3 +26,12 @@ def test_index_html_keeps_ais_claim_hypothetical():
     html = Path("index.html").read_text(encoding="utf-8")
     assert "AIS / output boundary" in html
     assert "future hypothesis" in html.lower()
+
+
+def test_index_html_records_corrected_gate6_generalization_result():
+    html = Path("index.html").read_text(encoding="utf-8")
+    assert "11 / 24" in html
+    assert "+0.0005" in html
+    assert "−0.0031" in html
+    assert "basis" in html.lower()
+    assert "context-dependent" in html.lower()
