@@ -46,6 +46,18 @@ def driving_point_conductance(
     return load
 
 
+def steady_state_soma_voltage(current: np.ndarray, *, load: float) -> np.ndarray:
+    """Return steady soma voltage for a somatic current under scalar load."""
+    drive = np.asarray(current, dtype=float)
+    if drive.ndim != 1 or len(drive) == 0:
+        raise ValueError("current must be a nonempty one-dimensional array")
+    if not np.all(np.isfinite(drive)):
+        raise ValueError("current must be finite")
+    if not np.isfinite(load) or load <= 0.0:
+        raise ValueError("load must be finite and positive")
+    return drive / float(load)
+
+
 def rate_boundary(
     voltage: np.ndarray,
     *,
