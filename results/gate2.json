@@ -1,0 +1,12 @@
+{
+  "filter_alignment_0": 0.9999145444416686,
+  "filter_alignment_1": 0.9998860968337906,
+  "gate": 2,
+  "identity_branch_accuracy": 0.50775,
+  "mean_filter_alignment": 0.9999003206377296,
+  "n_test": 4000,
+  "n_train": 6000,
+  "raw_linear_accuracy": 0.494,
+  "seed": 17,
+  "square_accuracy": 0.935
+}
