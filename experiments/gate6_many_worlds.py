@@ -14,7 +14,7 @@ from anttis_neuron.cable import (
     simulate_cable,
     visible_physical_modes,
 )
-from anttis_neuron.oja import absolute_cosine, oja_fit
+from anttis_neuron.oja import oja_fit
 from anttis_neuron.worlds import CableWorld, generate_world, port_sensor_matrices
 from experiments.common import emit
 from experiments.gate5_adaptive_cable import (
@@ -133,6 +133,37 @@ def _train_conditions(
     }, float(max(multiset_errors, default=0.0))
 
 
+def _subspace_alignment(vector: np.ndarray, basis: np.ndarray) -> float:
+    """Normalized projection of a vector into a row-basis span.
+
+    Sensor-space projections of physical eigenmodes need not be mutually
+    orthogonal. SVD produces an orthonormal basis for their span, making this
+    score invariant to sign flips, permutations, and rotations within a
+    degenerate physical eigenspace.
+    """
+    v = np.asarray(vector, dtype=float)
+    rows = np.asarray(basis, dtype=float)
+    if v.ndim != 1:
+        raise ValueError("alignment vector must be one-dimensional")
+    if rows.ndim != 2 or rows.shape[1] != v.size or rows.shape[0] == 0:
+        raise ValueError("basis must be a nonempty 2-D row basis matching the vector")
+    if not np.all(np.isfinite(v)) or not np.all(np.isfinite(rows)):
+        raise ValueError("alignment inputs must be finite")
+    v_norm = float(np.linalg.norm(v))
+    if v_norm <= 1e-12:
+        raise ValueError("alignment vector must be nonzero")
+
+    u, singular, _ = np.linalg.svd(rows.T, full_matrices=False)
+    if singular.size == 0 or singular[0] <= 1e-12:
+        raise ValueError("basis span must be nonzero")
+    rank = int(np.sum(singular > max(1e-12, singular[0] * 1e-10)))
+    if rank < 1:
+        raise ValueError("basis span has zero numerical rank")
+    q = u[:, :rank]
+    score = float(np.linalg.norm(q.T @ v) / v_norm)
+    return float(np.clip(score, 0.0, 1.0))
+
+
 def _evaluate(
     world: CableWorld,
     conductances: np.ndarray,
@@ -140,10 +171,15 @@ def _evaluate(
     *,
     oja_seed_base: int,
 ) -> dict:
-    a, b, s = _world_operator(world, conductances)
-    physical_modes = visible_physical_modes(a, s)[:3]
-    if len(physical_modes) < 3:
+    slow_visible_basis = visible_physical_modes(_world_operator(world, conductances)[0], _world_operator(world, conductances)[2])[:3]
+    if len(slow_visible_basis) < 3:
         raise FloatingPointError("Gate 6 world lost three visible physical modes")
+
+    a, b, s = _world_operator(world, conductances)
+    # Recompute the basis from the exact operator/sensor pair used below. This
+    # keeps evaluation and simulation tied to the same arrays while avoiding
+    # any dependence on individual eigenvector orientation inside the span.
+    slow_visible_basis = visible_physical_modes(a, s)[:3]
 
     alignments: list[float] = []
     for index, tape in enumerate(tapes):
@@ -157,7 +193,7 @@ def _evaluate(
             epochs=3,
             seed=oja_seed_base + index,
         )
-        alignments.append(max(absolute_cosine(learned, mode) for mode in physical_modes))
+        alignments.append(_subspace_alignment(learned, slow_visible_basis))
 
     return {
         "alignments": [float(v) for v in alignments],
@@ -260,6 +296,7 @@ def run(seed: int = 17, n_worlds: int = 24) -> dict:
         "gate": 6,
         "seed": seed,
         "n_worlds": n_worlds,
+        "alignment_metric": "normalized projection into span of three slowest visible nonuniform physical modes",
         "rule": {
             "dt": _DT,
             "leak": _LEAK,
@@ -275,6 +312,8 @@ def run(seed: int = 17, n_worlds: int = 24) -> dict:
         "worlds": world_results,
         "interpretation": (
             "predeclared many-world robustness test of the frozen Gate 5 local rule; "
+            "alignment is scored against the slow visible physical subspace so arbitrary "
+            "basis rotations inside degenerate eigenspaces cannot change the score; "
             "negative worlds are retained and no positive delta is required by CI"
         ),
     }
