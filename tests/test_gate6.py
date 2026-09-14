@@ -5,7 +5,12 @@ from pathlib import Path
 import numpy as np
 
 from anttis_neuron.worlds import generate_world
-from experiments.gate6_many_worlds import _subspace_alignment, run, run_world
+from experiments.gate6_many_worlds import (
+    _subspace_alignment,
+    run,
+    run_world,
+    trained_world_conductances,
+)
 
 
 def _finite(value):
@@ -85,6 +90,17 @@ def test_gate6_world_controls_are_matched_stable_and_bounded():
         assert len(world["sensor_nodes"]) == 4
 
 
+def test_gate6_trained_conductance_helper_reproduces_control_shapes():
+    world = generate_world(0, master_seed=1718)
+    trained = trained_world_conductances(world, tape_seed=6017)
+    assert set(trained) == {"frozen", "local", "shuffled", "uniform"}
+    for conductances in trained.values():
+        assert conductances.shape == (len(world.edges),)
+        assert np.all(np.isfinite(conductances))
+        assert np.all(conductances > 0.0)
+    assert np.array_equal(trained["uniform"], trained["frozen"])
+
+
 def test_gate6_known_near_degenerate_world_keeps_uniform_control_exactly_frozen():
     world = generate_world(4, master_seed=1718)
     result = run_world(world, tape_seed=6017)
@@ -118,6 +134,7 @@ def test_gate6_aggregate_reports_distribution_without_positive_requirement():
 def test_gate6_frozen_receipt_is_corrected_subspace_run():
     receipt = json.loads(Path("results/gate6.json").read_text(encoding="utf-8"))
     aggregate = receipt["aggregate"]
+    assert receipt["gate"] == 6
     assert receipt["n_worlds"] == 24
     assert receipt["alignment_metric"] == (
         "normalized projection into span of three slowest visible nonuniform physical modes"
