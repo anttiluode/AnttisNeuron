@@ -4,11 +4,9 @@
 
 **AnttisNeuron** is a small falsifiable study of one specific synthesis: a local Oja learner selects a statistical input mode, stable branched dynamics filter those statistics through time, branch-local nonlinearities provide computational subunits, and slow local structural changes can alter the physical operator that the learner observes.
 
-The useful question is not whether a neuron can be described as a two-layer network—that is prior art. It is narrower:
-
 > **When can local statistics and a physical branched operator reshape one another, and when does that idea fail?**
 
-See [PAPER.md](PAPER.md) for the complete Gates 0–6 argument, [index.html](index.html) for the visual companion, and `results/gate*.json` for frozen receipts.
+See [PAPER.md](PAPER.md) for the Gates 0–6 argument, [index.html](index.html) for the visual companion, and `results/gate*.json` for frozen receipts.
 
 ## Current result spine
 
