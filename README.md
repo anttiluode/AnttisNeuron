@@ -6,7 +6,7 @@
 
 > **When can local statistics and a physical branched operator reshape one another, and when does that idea fail?**
 
-See [PAPER.md](PAPER.md) for the Gates 0–6 argument, [[index.html](index.html)](https://anttiluode.github.io/AnttisNeuron/) for the visual companion, and `results/gate*.json` for frozen receipts.
+See [PAPER.md](PAPER.md) for the Gates 0–6 argument, [[index.html](index.html)](https://anttiluode.github.io/AnttisNeuron/) for the visual companion, and `results/gate*.json` for frozen receipts. Gate 7 is currently an executable constructive extension of Gate 3 rather than a claim about a biological growth sensor.
 
 ## Current result spine
 
@@ -21,10 +21,13 @@ See [PAPER.md](PAPER.md) for the Gates 0–6 argument, [[index.html](index.html)
 | 5B | eigenvalue-only **0.801087**; basis-only **0.892401**; full **0.900191** |
 | 6 | local beats frozen **11/24**; mean Δ **+0.000498** |
 | 6 | local beats shuffled **9/24**; mean Δ **−0.003074** |
+| 7 | modal gap **0.02 → 0.16** gives required growth **74 → 10**; equal-persistence control never purifies |
 
 Gate 5 is a strong synthetic success. Gate 5B shows that most of its gain follows **reorientation of the physical basis**, not an eigenvalue/time-scale change alone. Gate 6 then freezes the same rule across 24 deterministic branched worlds and finds essentially no aggregate advantage. That failure is retained rather than tuned away.
 
 Gate 6 uses a basis-invariant score: normalized projection of the learned Oja direction into the span of the three slowest visible non-uniform physical modes. This replaced an unstable individual-eigenvector score after a near-degenerate eigenspace exposed arbitrary basis rotation. Because the scored subspace is 3-D inside a 4-D sensor space, interpret Gate 6 from **within-world deltas**, not the high absolute projection values.
+
+Gate 7 returns to the original mode-purification intuition and asks a smaller question: if a designated target mode is more persistent than a distractor, can added serial path be treated as a finite purification budget? With a 95% target, doubling the modal gap repeatedly reduces the required integer path from **74 → 37 → 19 → 10**. At fixed gap, increasing distractor amplitude **0.5 → 1 → 2** increases required path **10 → 19 → 28**. When both modes have exactly equal persistence, purity remains **0.5 after 300 path units**. These results match the closed-form differential-decay law exactly by construction. The target identity and purity readout are oracle/developmental inputs, so Gate 7 does **not** yet explain biological growth or learning.
 
 ## Run it
 
@@ -33,13 +36,14 @@ python -m pip install -e ".[test]"
 pytest -q
 python experiments/gate5b_spectral_audit.py --out results/gate5b.json
 python experiments/gate6_many_worlds.py --worlds 24 --out results/gate6.json
+python experiments/gate7_growth_to_purity.py --out results/gate7.json
 ```
 
-CI tests determinism, stability, common tapes, exact shuffled-credit update multisets, basis-rotation invariance, receipt identity, and earlier gate regressions. CI never requires a preferred scientific delta.
+CI tests determinism, stability, common tapes, exact shuffled-credit update multisets, basis-rotation invariance, frozen Gate-7 receipt identity, and earlier gate regressions. CI never requires a preferred scientific delta where a gate is empirical.
 
 ## Biological anchors, not validation
 
-Aizenbud et al. (2026) report that dendritic morphology and nonlinear synaptic integration jointly shape modeled single-neuron functional complexity; geometry carries information beyond branch count alone. Leterrier (2018) reviews the AIS as a plastic determinant of excitability whose position and composition adapt to physiological conditions. These papers motivate the next questions—world geometry/electrical load, then an AIS-like output-boundary surrogate—but they do not validate the synthetic Gate-5 rule.
+Aizenbud et al. (2026) report that dendritic morphology and nonlinear synaptic integration jointly shape modeled single-neuron functional complexity; geometry carries information beyond branch count alone. Leterrier (2018) reviews the AIS as a plastic determinant of excitability whose position and composition adapt to physiological conditions. These papers motivate asking whether real morphology, membrane area, electrical load, and an AIS-like output boundary can eventually replace Gate 7's dimensionless path and oracle purity signal. They do not validate the synthetic Gate-5 rule or the Gate-7 growth interpretation.
 
 ## Interpretation rules
 
@@ -50,7 +54,8 @@ Aizenbud et al. (2026) report that dendritic morphology and nonlinear synaptic i
 5. Gate 5B’s hybrid operators are diagnostics, not literal cables.
 6. Gate 6 is a generalization failure, not a software failure.
 7. Near degeneracy, subspaces are the stable physical object—not arbitrary eigenvector labels.
-8. AIS/load adaptation remains **future work**.
+8. Gate 7 is a constructive growth-depth law with dimensionless path units and oracle target purity, not a learned or biological growth mechanism.
+9. AIS/load adaptation and a biophysical mapping from path to membrane area remain **future work**.
 
 ## Literature anchors
 
