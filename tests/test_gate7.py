@@ -1,4 +1,6 @@
+import json
 import math
+from pathlib import Path
 
 from experiments.gate7_growth_to_purity import run
 
@@ -44,3 +46,8 @@ def test_gate7_equal_persistence_is_a_hard_negative_control():
     assert control["growth_length"] == control["max_length"]
     assert math.isclose(control["initial_purity"], control["final_purity"], abs_tol=1e-12)
     assert math.isclose(control["purity_change"], 0.0, abs_tol=1e-12)
+
+
+def test_gate7_frozen_receipt_matches_experiment_exactly():
+    receipt = json.loads(Path("results/gate7.json").read_text(encoding="utf-8"))
+    assert receipt == run(seed=17)
