@@ -1,7 +1,9 @@
 import math
 
+import numpy as np
+
 from anttis_neuron.worlds import generate_world
-from experiments.gate6_many_worlds import run, run_world
+from experiments.gate6_many_worlds import _subspace_alignment, run, run_world
 
 
 def _finite(value):
@@ -14,6 +16,26 @@ def _finite(value):
     if isinstance(value, (int, float)):
         return math.isfinite(value)
     return False
+
+
+def test_gate6_subspace_alignment_is_basis_rotation_invariant():
+    basis = np.eye(4)[:, :3]
+    theta = 0.731
+    rotation = np.array(
+        [
+            [np.cos(theta), -np.sin(theta), 0.0],
+            [np.sin(theta), np.cos(theta), 0.0],
+            [0.0, 0.0, 1.0],
+        ]
+    )
+    rotated = basis @ rotation
+    vector = np.array([0.2, -0.5, 0.3, 0.7])
+
+    score = _subspace_alignment(vector, basis)
+    rotated_score = _subspace_alignment(vector, rotated)
+
+    assert math.isclose(score, rotated_score, rel_tol=0.0, abs_tol=1e-12)
+    assert math.isclose(score, np.linalg.norm(vector[:3]) / np.linalg.norm(vector), abs_tol=1e-12)
 
 
 def test_gate6_two_world_smoke_is_deterministic_and_finite():
