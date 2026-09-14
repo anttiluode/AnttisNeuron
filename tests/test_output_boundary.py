@@ -7,6 +7,7 @@ from anttis_neuron.output_boundary import (
     driving_point_conductance,
     homeostatic_gain,
     rate_boundary,
+    steady_state_soma_voltage,
     transfer_metrics,
 )
 
@@ -26,6 +27,43 @@ def test_two_node_load_matches_schur_complement():
     expected = diag - off * off / diag
     assert math.isclose(got, expected, rel_tol=0.0, abs_tol=1e-12)
     assert got > 0.0
+
+
+def test_steady_state_soma_voltage_is_current_over_load():
+    current = np.array([0.5, 1.0, 1.5])
+    voltage = steady_state_soma_voltage(current, load=0.25)
+    assert np.allclose(voltage, np.array([2.0, 4.0, 6.0]), rtol=0.0, atol=1e-15)
+
+
+def test_schur_load_voltage_matches_direct_graph_solve():
+    edges = np.array([[0, 1]], dtype=int)
+    conductances = np.array([2.0])
+    leak = 0.08
+    coupling = 0.65
+    load = driving_point_conductance(
+        2,
+        edges,
+        conductances,
+        leak=leak,
+        coupling=coupling,
+    )
+    current = 1.7
+    from_load = float(steady_state_soma_voltage(np.array([current]), load=load)[0])
+
+    lap = np.array([[2.0, -2.0], [-2.0, 2.0]])
+    conductance_matrix = leak * np.eye(2) + coupling * lap
+    direct = np.linalg.solve(conductance_matrix, np.array([current, 0.0]))
+    assert math.isclose(from_load, float(direct[0]), rel_tol=0.0, abs_tol=1e-12)
+
+
+def test_steady_state_soma_voltage_rejects_nonpositive_load():
+    for load in (0.0, -1.0):
+        try:
+            steady_state_soma_voltage(np.array([1.0]), load=load)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("steady-state soma voltage must reject nonpositive load")
 
 
 def test_rate_boundary_is_finite_and_bounded():
