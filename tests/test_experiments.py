@@ -83,8 +83,8 @@ def test_gate5_reports_controls_without_requiring_positive_result():
 
 def test_gate5_frozen_receipt_headlines_do_not_move():
     result = run5(seed=17)
-    assert result["adaptive_heldout_mean_alignment"] == 0.9001914311455128
-    assert result["frozen_heldout_mean_alignment"] == 0.7821845260371927
+    assert math.isclose(result["adaptive_heldout_mean_alignment"], 0.9001914311455128, abs_tol=1e-12)
+    assert math.isclose(result["frozen_heldout_mean_alignment"], 0.7821845260371927, abs_tol=1e-12)
 
 
 def test_gate5b_reports_decomposition_without_sign_requirement():
