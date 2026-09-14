@@ -41,9 +41,11 @@ For each world:
 1. Reproduce the Gate-6 local-adaptation trajectory with the Gate-5 rule frozen exactly as before.
 2. Freeze the resulting local-adapted conductances.
 3. Treat node `0` as the soma / output-boundary interface.
-4. Generate a fresh Gate-7 calibration tape and independent held-out evaluation tapes from fixed predeclared seeds.
+4. Generate a fresh Gate-7 calibration tape and independent held-out evaluation tape from fixed predeclared seeds.
 
 Using the local-adapted Gate-6 structures makes the load variation partly input-shaped, while keeping the Gate-7 output adaptation causally downstream. Gate 7 does not feed its output metric back into dendritic adaptation.
+
+The Gate-7 master seed is `17`. Dendritic adaptation is reproduced exactly from Gate 6. Gate-7 calibration uses a separate `SeedSequence([7017, world.seed, world.index])`; held-out evaluation uses `SeedSequence([8017, world.seed, world.index])`. Each calibration tape has `3000` four-dimensional samples; each held-out base tape has `5000` samples. These seeds and lengths are frozen before scientific execution.
 
 ## Electrical-load measurement
 
@@ -86,13 +88,15 @@ The model does not sample spikes. `r_t` is a bounded firing-rate surrogate used 
 
 World `0` is the predeclared reference world.
 
-Using only its Gate-7 calibration tape:
+Using only its Gate-7 calibration tape at unit input scale:
 
 1. set `a = 1`,
-2. choose `theta` by deterministic bisection so the reference world reaches a fixed target mean rate at unit input scale,
-3. freeze `theta`, `beta`, and the target rate for every other world and every condition.
+2. compute the post-burn soma-voltage standard deviation `s_v`,
+3. set `beta = 2 / s_v`,
+4. choose `theta` by deterministic bisection so the reference world reaches target mean rate `r_* = 0.25`,
+5. freeze `theta`, `beta`, and `r_*` for every other world and every condition.
 
-No held-out world metric is used in calibration.
+The cable burn-in is `250` samples, matching the existing Gate-6 evaluation convention. If `s_v` is nonfinite or `<= 1e-12`, the assay is invalid and fails engineering verification. No held-out world metric is used in calibration.
 
 ## Three conditions
 
@@ -102,13 +106,13 @@ No held-out world metric is used in calibration.
 
 ### 2. Local homeostatic boundary
 
-Start from `a = 1`. During calibration only, update log-gain from the boundary's own mean output rate:
+Start from `a = 1`. Repeat the same world-specific calibration tape for exactly `12` homeostatic phases. At each phase update log-gain from the boundary's own mean output rate:
 
 ```math
 \log a \leftarrow \operatorname{clip}\left(
-\log a + \eta_a (r_* - \bar r),
-\log a_{min},
-\log a_{max}
+\log a + 0.5 (r_* - \bar r),
+\log 0.2,
+\log 5.0
 \right).
 ```
 
@@ -122,29 +126,29 @@ The oracle does not learn. It uses the closed-form load ratio
 a_{oracle} = \frac{g_{load}(world)}{g_{load}(reference)}.
 ```
 
-The intuition is that higher driving-point conductance lowers voltage response for comparable injected drive, so output excitability should scale with the load ratio. This is a diagnostic ceiling/reference, not a proposed local mechanism.
+The oracle ratio is not clipped. If it drives the rate surrogate into a poor operating regime, that is part of the scientific result. The intuition is that higher driving-point conductance lowers voltage response for comparable injected drive, so output excitability should scale with the load ratio. This is a diagnostic reference, not a proposed local mechanism.
 
 ## Evaluation protocol
 
-Use common held-out base tapes across all three output-boundary conditions within each world. Evaluate a fixed input-amplitude sweep, for example
+Use the same held-out base tape for all three output-boundary conditions within a world. Evaluate the exact fixed input-amplitude sweep
 
 ```text
 0.50, 0.75, 1.00, 1.25, 1.50
 ```
 
-multiplying the same held-out tape. The exact sweep and seeds are fixed before the 24-world receipt is run.
+by multiplying the held-out base tape by each scale. Conditions therefore differ only in the output-boundary gain.
 
 For every world and condition, record:
 
-- mean rate at each input scale,
+- mean rate at each of the five input scales,
 - input-output curve RMSE relative to the reference-world fixed-boundary curve,
-- an interpolated rheobase analogue: input scale where the mean rate first crosses a fixed low-rate threshold,
-- local F-I gain: slope of the rate-vs-input curve around the target operating region,
+- an interpolated rheobase analogue: the first input scale where mean rate crosses `0.10`, linearly interpolated between adjacent sweep points; if no crossing exists, record `null`,
+- F-I gain defined as the least-squares slope through the three central sweep points `0.75, 1.00, 1.25`,
 - mean rate at scale `1.0`,
 - final excitability gain `a`,
 - driving-point load `g_load` (reported for analysis; hidden from the local learner).
 
-Across worlds, report dispersion of curve RMSE, rheobase analogue, F-I gain, and unit-scale rate.
+Across worlds, report mean/median/upper-quartile curve RMSE, unit-scale-rate standard deviation, finite rheobase standard deviation plus missing-count, and F-I-gain standard deviation.
 
 ## Anti-silence / anti-saturation safeguards
 
@@ -153,15 +157,16 @@ Raw variance alone is not a success metric because a condition could reduce disp
 Therefore:
 
 - the primary metric is input-output **curve error relative to the nontrivial reference curve**,
-- the reference curve must span a minimum dynamic range,
+- the reference curve must have `max(rate)-min(rate) >= 0.10` across the five input scales,
 - condition summaries report both dispersion and mean operating rate,
-- a world that collapses to near-zero or near-one rate is retained and explicitly marked rather than counted as a successful compensation.
+- a world with unit-scale mean rate `< 0.02` or `> 0.98` is flagged as collapsed rather than counted as a successful compensation,
+- collapsed worlds remain in all curve-error aggregates.
 
-CI will test these bookkeeping/invariant rules but will not require the local condition to beat fixed or approach the oracle.
+CI tests these assay/invariant rules but does not require the local condition to beat fixed or approach the oracle.
 
 ## Primary scientific comparisons
 
-The predeclared comparisons are:
+For each non-reference world, define
 
 ```math
 \Delta_{homeo} = E_{fixed} - E_{homeostatic}
@@ -173,9 +178,9 @@ and
 \Delta_{oracle} = E_{fixed} - E_{oracle},
 ```
 
-where `E` is held-out curve error relative to the reference transfer function. Positive values mean reduced error.
+where `E` is held-out curve RMSE relative to the reference transfer function. Positive values mean reduced error. World `0` is retained in receipts but excluded from mean delta summaries because it defines the reference curve.
 
-Also report whether load predicts fixed-boundary curve distortion and whether learned `a` tracks the oracle load ratio, but these correlations are descriptive secondary measurements.
+Report mean, median, lower quartile, win fraction, and worst case for both deltas. Also report whether load predicts fixed-boundary curve distortion and whether learned `a` tracks the oracle load ratio, but these correlations are descriptive secondary measurements.
 
 ## Falsification criteria
 
@@ -191,7 +196,7 @@ Failures are retained in the frozen receipt. No positive scientific delta is req
 
 ## Software boundaries
 
-Prefer a new focused module, `anttis_neuron/output_boundary.py`, containing:
+Add a focused module, `anttis_neuron/output_boundary.py`, containing:
 
 - driving-point conductance calculation,
 - rate-boundary forward function,
@@ -199,9 +204,9 @@ Prefer a new focused module, `anttis_neuron/output_boundary.py`, containing:
 - local homeostatic gain update,
 - transfer-curve metrics.
 
-Add `experiments/gate7_load_compensation.py` for the scientific protocol and `tests/test_gate7.py` plus focused unit tests for the output-boundary module.
+Add `experiments/gate7_load_compensation.py` for the scientific protocol and `tests/test_output_boundary.py` plus `tests/test_gate7.py` for focused unit and experiment invariants.
 
-Gate-6 code and receipts remain unchanged. Reuse Gate-6 world generation and dendritic training, factoring a stable helper only if necessary without changing Gate-6 numerical output.
+Gate-6 code and receipts remain unchanged. Reuse Gate-6 world generation and dendritic training, factoring a stable helper only if necessary and pinning Gate-6 numerical regression before any refactor.
 
 The frozen receipt will be `results/gate7.json`.
 
@@ -213,11 +218,13 @@ CI must verify:
 - positive finite driving-point load,
 - common evaluation tapes across conditions,
 - local adaptor interface cannot accept load/structure/spectral information,
-- oracle gain equals the documented load ratio,
+- oracle gain equals the documented unclipped load ratio,
 - fixed and local conditions begin from identical `a = 1`,
 - rate outputs are finite and in `[0,1]`,
-- reference curve has nontrivial dynamic range,
+- reference curve dynamic range is at least `0.10`,
+- collapsed worlds are retained rather than dropped from curve-error aggregates,
 - full Gate-7 receipt is reproducible,
+- Gate-6 frozen receipt remains byte-for-byte unchanged,
 - no scientific-positive assertion is encoded as a test.
 
 A small two-world test is used for fast CI invariants; the full 24-world receipt runs once on Python 3.11, while the engineering suite runs on Python 3.11 and 3.12.
