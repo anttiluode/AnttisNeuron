@@ -12,6 +12,7 @@ from anttis_neuron.cable import (
     default_ports_and_sensors,
     default_tree,
     edge_difference_energy,
+    normalize_mean_conductance,
     simulate_cable,
     visible_physical_modes,
 )
@@ -85,36 +86,76 @@ def _initial_q_target(first_tape: np.ndarray) -> float:
     return target
 
 
-def _train_structure(
-    mode: str,
+def _apply_signal(conductances: np.ndarray, signal: np.ndarray) -> np.ndarray:
+    """Apply a precomputed log-update signal without recomputing local credit."""
+    proposal = conductances * np.exp(_ETA * np.asarray(signal, dtype=float))
+    if not np.all(np.isfinite(proposal)):
+        raise FloatingPointError("control conductance update became non-finite")
+    return normalize_mean_conductance(
+        proposal,
+        float(np.mean(conductances)),
+        _G_MIN,
+        _G_MAX,
+    )
+
+
+def _train_conditions(
     adaptation_tapes: list[np.ndarray],
     *,
     q_target: float,
     seed: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    conductances = np.ones(10, dtype=float)
-    energy_history: list[np.ndarray] = []
+) -> tuple[dict[str, tuple[np.ndarray, np.ndarray]], float]:
+    """Train local structure and matched-credit controls on common tapes.
+
+    The local trajectory alone determines each phase's edge-update signal. The
+    shuffled control receives that exact multiset, permuted onto the wrong edges;
+    the uniform control receives only its phase mean. Neither control recomputes
+    credit from its own diverged state.
+    """
+    local_g = np.ones(10, dtype=float)
+    shuffled_g = np.ones(10, dtype=float)
+    uniform_g = np.ones(10, dtype=float)
+    frozen_g = np.ones(10, dtype=float)
+    local_energy_history: list[np.ndarray] = []
     shuffle_rng = np.random.default_rng(seed + 1000)
+    multiset_errors: list[float] = []
 
     for tape in adaptation_tapes:
-        a, b, s, edges = _operator(conductances)
-        _, states = simulate_cable(tape, a, b, s, return_states=True)
-        energy_history.append(edge_difference_energy(states, edges))
-        if mode == "frozen":
-            continue
-        conductances = adapt_conductances(
-            states,
+        a, b, s, edges = _operator(local_g)
+        _, local_states = simulate_cable(tape, a, b, s, return_states=True)
+        local_energy = edge_difference_energy(local_states, edges)
+        local_energy_history.append(local_energy)
+        local_signal = local_energy / q_target - 1.0
+
+        # Preserve the original adaptive-local trajectory exactly.
+        local_g = adapt_conductances(
+            local_states,
             edges,
-            conductances,
+            local_g,
             eta=_ETA,
             q_target=q_target,
             g_min=_G_MIN,
             g_max=_G_MAX,
-            mode=mode,
-            rng=shuffle_rng if mode == "shuffled" else None,
+            mode="local",
         )
 
-    return conductances, np.mean(np.asarray(energy_history), axis=0)
+        shuffled_signal = shuffle_rng.permutation(local_signal)
+        multiset_errors.append(
+            float(np.max(np.abs(np.sort(local_signal) - np.sort(shuffled_signal))))
+        )
+        shuffled_g = _apply_signal(shuffled_g, shuffled_signal)
+
+        uniform_signal = np.full_like(local_signal, float(np.mean(local_signal)))
+        uniform_g = _apply_signal(uniform_g, uniform_signal)
+
+    local_energy_mean = np.mean(np.asarray(local_energy_history), axis=0)
+    trained = {
+        "frozen": (frozen_g, local_energy_mean),
+        "local": (local_g, local_energy_mean),
+        "shuffled": (shuffled_g, local_energy_mean),
+        "uniform": (uniform_g, local_energy_mean),
+    }
+    return trained, float(max(multiset_errors, default=0.0))
 
 
 def _evaluate(conductances: np.ndarray, tapes: list[np.ndarray], *, oja_seed_base: int) -> dict:
@@ -163,9 +204,11 @@ def run(seed: int = 17) -> dict:
     digest = _tape_digest(adaptation_tapes, heldout_tapes)
     q_target = _initial_q_target(adaptation_tapes[0])
 
-    trained: dict[str, tuple[np.ndarray, np.ndarray]] = {}
-    for mode in ("frozen", "local", "shuffled", "uniform"):
-        trained[mode] = _train_structure(mode, adaptation_tapes, q_target=q_target, seed=seed)
+    trained, multiset_error = _train_conditions(
+        adaptation_tapes,
+        q_target=q_target,
+        seed=seed,
+    )
 
     # Common Oja initialization per tape across every structural condition.
     heldout_eval = {
@@ -194,6 +237,7 @@ def run(seed: int = 17) -> dict:
         "q_target": q_target,
         "common_tape_digest": digest,
         "control_tape_digest": digest,
+        "control_update_multiset_max_error": multiset_error,
         "frozen_conductances": frozen_g.tolist(),
         "adaptive_conductances": adaptive_g.tolist(),
         "shuffled_conductances": shuffled_g.tolist(),
@@ -234,7 +278,7 @@ def run(seed: int = 17) -> dict:
         "frozen_mean_state_rms": heldout_eval["frozen"]["mean_state_rms"],
         "adaptive_mean_state_rms": heldout_eval["local"]["mean_state_rms"],
         "shuffled_mean_state_rms": heldout_eval["shuffled"]["mean_state_rms"],
-        "interpretation": "alignment-blind local structural test; scientific deltas are reported, not required positive by CI",
+        "interpretation": "alignment-blind local structural test; shuffled credit uses the exact local update multiset per phase; scientific deltas are not required positive by CI",
     }
 
 
