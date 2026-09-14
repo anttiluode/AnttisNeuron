@@ -1,4 +1,6 @@
+import json
 import math
+from pathlib import Path
 
 import numpy as np
 
@@ -111,6 +113,23 @@ def test_gate6_aggregate_reports_distribution_without_positive_requirement():
         assert 0.0 <= aggregate[key] <= 1.0
     assert 0 <= aggregate["adaptive_loses_to_frozen_count"] <= 2
     assert 0 <= aggregate["adaptive_loses_to_shuffled_count"] <= 2
+
+
+def test_gate6_frozen_receipt_is_corrected_subspace_run():
+    receipt = json.loads(Path("results/gate6.json").read_text(encoding="utf-8"))
+    aggregate = receipt["aggregate"]
+    assert receipt["n_worlds"] == 24
+    assert receipt["alignment_metric"] == (
+        "normalized projection into span of three slowest visible nonuniform physical modes"
+    )
+    assert math.isclose(aggregate["adaptive_beats_frozen_fraction"], 11 / 24, abs_tol=1e-15)
+    assert math.isclose(aggregate["adaptive_beats_shuffled_fraction"], 9 / 24, abs_tol=1e-15)
+    assert math.isclose(
+        aggregate["adaptive_minus_frozen_mean"], 0.0004983253901210636, abs_tol=1e-15
+    )
+    assert math.isclose(
+        aggregate["adaptive_minus_shuffled_mean"], -0.0030741241500673914, abs_tol=1e-15
+    )
 
 
 def test_gate6_rejects_world_count_outside_predeclared_suite():
