@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,6 +31,30 @@ jobs:
           python experiments/gate4_alignment.py --out /tmp/gate4.json
           python experiments/gate5_adaptive_cable.py --out /tmp/gate5.json
           python experiments/gate5b_spectral_audit.py --out /tmp/gate5b.json
+          python experiments/gate7_load_compensation.py --worlds 2 --out /tmp/gate7-smoke.json
       - name: Gate 6 many-world verification
         if: matrix.python-version == '3.11'
         run: python experiments/gate6_many_worlds.py --worlds 24 --out /tmp/gate6.json
+      - name: Gate 7 full receipt
+        if: matrix.python-version == '3.11'
+        run: |
+          if [ -f results/gate7.json ]; then
+            python experiments/gate7_load_compensation.py --seed 17 --worlds 24 --out /tmp/gate7.json
+            cmp /tmp/gate7.json results/gate7.json
+          else
+            python experiments/gate7_load_compensation.py --seed 17 --worlds 24 --out results/gate7.json
+            python - <<'PY'
+          import json
+          data = json.load(open("results/gate7.json", encoding="utf-8"))
+          print("GATE7_AGGREGATE", json.dumps(data["aggregate"], sort_keys=True))
+          PY
+            if [ "${{ github.event_name }}" != "push" ]; then
+              echo "Gate 7 receipt is absent and may only be frozen from a push run."
+              exit 1
+            fi
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add results/gate7.json
+            git commit -m "science: freeze Gate 7 somatic load receipt"
+            git push
+          fi
