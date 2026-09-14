@@ -26,3 +26,4 @@ jobs:
           python experiments/gate2_mode_energy.py --out /tmp/gate2.json
           python experiments/gate3_temporal_modes.py --out /tmp/gate3.json
           python experiments/gate4_alignment.py --out /tmp/gate4.json
+          python experiments/gate5_adaptive_cable.py --out /tmp/gate5.json

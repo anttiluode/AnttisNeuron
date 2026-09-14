@@ -5,6 +5,7 @@ from experiments.gate1_identities import run as run1
 from experiments.gate2_mode_energy import run as run2
 from experiments.gate3_temporal_modes import run as run3
 from experiments.gate4_alignment import run as run4
+from experiments.gate5_adaptive_cable import run as run5
 
 
 def _all_finite(value):
@@ -20,7 +21,7 @@ def _all_finite(value):
 
 
 def test_all_gates_are_finite_and_deterministic():
-    for gate in (run0, run1, run2, run3, run4):
+    for gate in (run0, run1, run2, run3, run4, run5):
         a = gate(seed=17)
         b = gate(seed=17)
         assert a == b
@@ -58,6 +59,25 @@ def test_gate4_reports_controls_without_requiring_positive_result():
     assert 0.0 <= result["coupled_alignment"] <= 1.0
     assert 0.0 <= result["no_memory_alignment"] <= 1.0
     assert -1.0 <= result["delta_alignment"] <= 1.0
+
+
+def test_gate5_reports_controls_without_requiring_positive_result():
+    result = run5(seed=17)
+    assert result["gate"] == 5
+    assert result["seed"] == 17
+    for key in (
+        "frozen_heldout_mean_alignment",
+        "adaptive_heldout_mean_alignment",
+        "shuffled_heldout_mean_alignment",
+        "uniform_heldout_mean_alignment",
+    ):
+        assert 0.0 <= result[key] <= 1.0
+    assert -1.0 <= result["adaptive_minus_frozen"] <= 1.0
+    assert -1.0 <= result["adaptive_minus_shuffled"] <= 1.0
+    assert len(result["adaptive_conductances"]) == 10
+    assert result["adaptive_spectral_radius"] < 1.0
+    assert result["common_tape_digest"] == result["control_tape_digest"]
+    assert result["control_update_multiset_max_error"] < 1e-12
 
 
 def test_gate3_receipt_preserves_requested_seed():
