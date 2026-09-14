@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#07100f">
+  <title>AnttisNeuron — Wild hand waving, executable receipts</title>
+  <meta name="description" content="A visual, falsifiable study of spectral learning, dendritic computation, physical structure, and the path from analog branch dynamics to a spike.">
+  <meta property="og:title" content="AnttisNeuron — Wild hand waving, executable receipts">
+  <meta property="og:description" content="A visual, falsifiable study of spectral learning, dendritic computation, physical structure, and the path from analog branch dynamics to a spike.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://github.com/anttiluode/AnttisNeuron">
+  <link rel="canonical" href="https://github.com/anttiluode/AnttisNeuron">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to evidence</a>
+  <nav class="topbar" aria-label="Primary navigation">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top">ANTTISNEURON</a>
+      <div class="nav-links">
+        <a href="#claims">Claims</a>
+        <a href="#receipts">Receipts</a>
+        <a href="#gate6">Gate 6</a>
+        <a href="#next">Next</a>
+        <a href="https://github.com/anttiluode/AnttisNeuron/blob/main/PAPER.md">Paper</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <header class="hero wrap" id="top">
+      <p class="eyebrow">Wild hand waving. Executable receipts underneath.</p>
+      <h1>Re-inventing a neuron badly enough to falsify it.</h1>
+      <p class="lede">A deliberately testable path from recurring input statistics, through a branching physical substrate and local nonlinear computation, toward a stateful output boundary.</p>
+      <div class="hero-actions">
+        <a class="button primary" href="#receipts">See the evidence</a>
+        <a class="button" href="https://github.com/anttiluode/AnttisNeuron">Open the repository</a>
+      </div>
+      <div class="honesty"><strong>Important:</strong> the diagram below is a conceptual map, not evidence and not a literal biophysical neuron. Every strong claim on this page is tagged as <em>prior work</em>, <em>exact</em>, <em>synthetic</em>, or <em>open hypothesis</em>.</div>
+
+      <section class="schematic" aria-labelledby="schematic-title">
+        <div class="schematic-head">
+          <div>
+            <p class="section-kicker">The mental picture</p>
+            <h2 id="schematic-title">Statistics → structure → state → event</h2>
+          </div>
+          <p class="microcopy">Focus or tap a stage to inspect what it means.</p>
+        </div>
+        <div class="neuron-stage" aria-label="Conceptual neuron flow">
+          <svg viewBox="0 0 1100 420" role="img" aria-label="Abstract neuron-like flow from statistical inputs through branches and soma to an output boundary">
+            <defs>
+              <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <path class="wire hot" d="M90 80 C230 80 275 165 455 205 S600 205 690 205"/>
+            <path class="wire" d="M90 335 C225 335 300 250 455 220 S610 210 690 205"/>
+            <path class="wire hot" d="M115 205 C255 205 345 205 455 210 S610 207 690 205"/>
+            <path class="wire" d="M270 35 C320 90 360 150 455 205"/>
+            <path class="wire" d="M300 385 C350 325 385 260 455 220"/>
+            <circle class="node" cx="90" cy="80" r="14"/>
+            <circle class="node" cx="90" cy="335" r="14"/>
+            <circle class="node" cx="115" cy="205" r="14"/>
+            <circle class="node" cx="270" cy="35" r="10"/>
+            <circle class="node" cx="300" cy="385" r="10"/>
+            <circle class="soma" cx="730" cy="205" r="50"/>
+            <path class="wire axon" d="M780 205 L860 205"/>
+            <rect class="ais" x="860" y="183" width="115" height="44" rx="22"/>
+            <path class="wire axon" d="M975 205 L1060 205"/>
+            <circle class="pulse" cx="105" cy="205" r="7"/>
+            <text x="35" y="30" class="svg-label">recurring statistics</text>
+            <text x="350" y="38" class="svg-label">branched physical operator</text>
+            <text x="692" y="286" class="svg-label">soma / load</text>
+            <text x="840" y="282" class="svg-label warm">AIS / output boundary</text>
+          </svg>
+        </div>
+        <div class="stage-grid" role="list">
+          <button class="stage-card active" type="button" data-stage="synapse" role="listitem"><span class="tag prior">prior work</span><strong>Synapses</strong><span>Local weights can track recurring covariance structure.</span></button>
+          <button class="stage-card" type="button" data-stage="branch" role="listitem"><span class="tag synthetic">synthetic</span><strong>Branches</strong><span>Physical dynamics preserve some components longer than others.</span></button>
+          <button class="stage-card" type="button" data-stage="nonlinearity" role="listitem"><span class="tag exact">exact</span><strong>Nonlinearity</strong><span>Before pooling, it creates genuine hidden computational subunits.</span></button>
+          <button class="stage-card" type="button" data-stage="ais" role="listitem"><span class="tag open">open hypothesis</span><strong>Output boundary</strong><span>The load-compensation/AIS idea is the next explicit falsification target.</span></button>
+        </div>
+        <div id="stage-detail" class="stage-detail" aria-live="polite">Oja-style local learning can recover a leading covariance direction. AnttisNeuron reproduces that as a sanity gate; it does not claim that one isolated synapse independently performs PCA.</div>
+      </section>
+    </header>
+
+    <div class="hard-divider wrap">
+      <strong>Hand waving ends here. Executable claims begin here.</strong>
+      <span>Scripts, controls and committed JSON receipts decide what survives.</span>
+    </div>
+
+    <section class="wrap section" id="claims">
+      <p class="section-kicker">Claim ledger</p>
+      <h2>What is actually being claimed?</h2>
+      <p class="copy">The project becomes easier to understand once biology, algebra, synthetic experiments and speculation are kept in separate boxes.</p>
+      <div class="claim-grid">
+        <article class="claim-card prior-card"><span class="tag prior">prior work</span><h3>Established / inherited</h3><p>Oja-style learning can recover a leading covariance direction. Dendrites can support nonlinear subunits. The AIS initiates and shapes action potentials.</p></article>
+        <article class="claim-card exact-card"><span class="tag exact">exact</span><h3>Exact in this model</h3><p>Static linear branches collapse to one affine filter. Square branch responses form a quadratic form. These are algebraic identities, not biological discoveries.</p></article>
+        <article class="claim-card synthetic-card"><span class="tag synthetic">synthetic</span><h3>Earned here</h3><p>Local structural adaptation can strongly improve statistical↔physical alignment in one constructed cable, while the same frozen rule fails to generalize robustly across 24 worlds.</p></article>
+        <article class="claim-card open-card"><span class="tag open">open hypothesis</span><h3>Still unearned</h3><p>Real dendritic morphology reorganizes toward input statistical modes, or dendrite and AIS co-adapt into a self-consistent input-to-spike circuit.</p></article>
+      </div>
+    </section>
+
+    <section class="wrap section" id="receipts">
+      <p class="section-kicker">Machine-readable evidence</p>
+      <h2>Executable receipts</h2>
+      <p class="copy">The numbers below are fetched from the exact JSON files committed with the experiments. If a receipt cannot be loaded, the page says so instead of quietly showing a stale number.</p>
+
+      <div class="receipt-grid">
+        <article class="receipt-card" data-receipt-card="gate2">
+          <div class="receipt-head"><div><span class="gate-label">Gate 2</span><h3>Variance-only benchmark</h3></div><span class="receipt-state">loading receipt…</span></div>
+          <div class="metric-grid">
+            <div><span class="metric-label">raw linear</span><strong data-value="raw_linear_accuracy">—</strong></div>
+            <div><span class="metric-label">square branches</span><strong data-value="square_accuracy">—</strong></div>
+            <div><span class="metric-label">mean Oja alignment</span><strong data-value="mean_filter_alignment">—</strong></div>
+          </div>
+          <p class="meaning">Purpose-built second-order information is invisible to the linear readout but becomes available after branch-local squaring.</p>
+          <div class="receipt-links"><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/experiments/gate2_mode_energy.py">experiment</a><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/results/gate2.json">JSON receipt</a></div>
+        </article>
+
+        <article class="receipt-card" data-receipt-card="gate4">
+          <div class="receipt-head"><div><span class="gate-label">Gate 4</span><h3>Constructive recurrence</h3></div><span class="receipt-state">loading receipt…</span></div>
+          <div class="metric-grid">
+            <div><span class="metric-label">fixed</span><strong data-value="fixed_alignment">—</strong></div>
+            <div><span class="metric-label">recurrent</span><strong data-value="coupled_alignment">—</strong></div>
+            <div><span class="metric-label">delta</span><strong data-value="delta_alignment">—</strong></div>
+          </div>
+          <p class="meaning">A constructed recurrent physical process can reshape the statistics later selected by Oja learning. It is an existence test, not spontaneous self-organization.</p>
+          <div class="receipt-links"><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/experiments/gate4_alignment.py">experiment</a><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/results/gate4.json">JSON receipt</a></div>
+        </article>
+
+        <article class="receipt-card feature" data-receipt-card="gate5">
+          <div class="receipt-head"><div><span class="gate-label">Gate 5</span><h3>Local structural adaptation</h3></div><span class="receipt-state">loading receipt…</span></div>
+          <div class="metric-grid four-metrics">
+            <div><span class="metric-label">frozen</span><strong data-value="frozen_heldout_mean_alignment">—</strong></div>
+            <div><span class="metric-label">local</span><strong data-value="adaptive_heldout_mean_alignment">—</strong></div>
+            <div><span class="metric-label">shuffled credit</span><strong data-value="shuffled_heldout_mean_alignment">—</strong></div>
+            <div><span class="metric-label">local − frozen</span><strong data-value="adaptive_minus_frozen">—</strong></div>
+          </div>
+          <p class="meaning">Correct local credit strongly helps in this one specified 11-node world, despite the rule seeing no eigenvectors, Oja weights, labels or held-out score.</p>
+          <div class="receipt-links"><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/experiments/gate5_adaptive_cable.py">experiment</a><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/results/gate5.json">JSON receipt</a></div>
+        </article>
+
+        <article class="receipt-card" data-receipt-card="gate5b">
+          <div class="receipt-head"><div><span class="gate-label">Gate 5B</span><h3>What actually moved?</h3></div><span class="receipt-state">loading receipt…</span></div>
+          <div class="metric-grid">
+            <div><span class="metric-label">eigenvalue-only</span><strong data-value="diagnostic_conditions.eigenvalue_only.mean_alignment">—</strong></div>
+            <div><span class="metric-label">basis-only</span><strong data-value="diagnostic_conditions.eigenvector_only.mean_alignment">—</strong></div>
+            <div><span class="metric-label">fully adapted</span><strong data-value="diagnostic_conditions.adapted.mean_alignment">—</strong></div>
+          </div>
+          <p class="meaning">Most of the Gate-5 gain follows reorientation of the physical basis, not merely a change of decay timescales.</p>
+          <div class="receipt-links"><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/experiments/gate5b_spectral_audit.py">experiment</a><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/results/gate5b.json">JSON receipt</a></div>
+        </article>
+
+        <article class="receipt-card negative" data-receipt-card="gate6" id="gate6">
+          <div class="receipt-head"><div><span class="gate-label">Gate 6</span><h3>Gate 6: the rule met other worlds</h3></div><span class="receipt-state">loading receipt…</span></div>
+          <div class="metric-grid four-metrics">
+            <div><span class="metric-label">worlds</span><strong data-value="n_worlds" data-format="int">—</strong></div>
+            <div><span class="metric-label">wins vs frozen</span><strong data-value="aggregate.adaptive_beats_frozen_fraction" data-format="fraction-count">—</strong></div>
+            <div><span class="metric-label">mean Δ vs frozen</span><strong data-value="aggregate.adaptive_minus_frozen_mean" data-format="signed">—</strong></div>
+            <div><span class="metric-label">mean Δ vs shuffled</span><strong data-value="aggregate.adaptive_minus_shuffled_mean" data-format="signed">—</strong></div>
+          </div>
+          <p class="meaning"><strong>The attractive rule does not generalize robustly.</strong> Negative worlds are retained. The useful scientific object is the boundary of success, not pretending Gate 5 became a universal law.</p>
+          <div class="receipt-links"><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/experiments/gate6_many_worlds.py">experiment</a><a href="https://github.com/anttiluode/AnttisNeuron/blob/main/results/gate6.json">JSON receipt</a></div>
+        </article>
+      </div>
+      <noscript><p class="noscript">JavaScript is disabled, so dynamic receipt values are not shown. The conceptual claims remain readable; use the JSON receipt links for the authoritative numbers.</p></noscript>
+    </section>
+
+    <section class="wrap section ledger-section">
+      <div class="ledger-panel playful">
+        <p class="section-kicker">The hand-waving picture</p>
+        <h2>What we are imagining</h2>
+        <p>Recurring statistics leave preferred directions at the synapses. Branches behave like a physical filter bank. Local nonlinear convergence makes those branch states computationally useful. The soma presents an electrical load. A trigger region converts analog state into an event.</p>
+      </div>
+      <div class="ledger-panel sober">
+        <p class="section-kicker">The serious ledger</p>
+        <h2>What the repo has earned</h2>
+        <p>Exact identities. Deterministic synthetic experiments. Matched controls. Frozen machine-readable receipts. A mechanism audit. A many-world robustness test that was allowed to weaken the hypothesis.</p>
+      </div>
+    </section>
+
+    <section class="wrap section" id="ladder">
+      <p class="section-kicker">Research ladder</p>
+      <h2>Seven questions, one narrowing claim</h2>
+      <div class="ladder">
+        <article><span>0</span><h3>Can local Oja learning recover a dominant covariance direction?</h3><p>Yes, sanity check.</p></article>
+        <article><span>1</span><h3>What disappears if every branch is linear?</h3><p>Everything collapses to one effective linear map.</p></article>
+        <article><span>2</span><h3>Can branch nonlinearity expose second-order information?</h3><p>Yes, in a purpose-built variance task.</p></article>
+        <article><span>3</span><h3>Can physical dynamics prefer one mode over another?</h3><p>Yes, as differential decay.</p></article>
+        <article><span>4</span><h3>Can recurrence reshape what Oja later sees?</h3><p>Yes, constructively.</p></article>
+        <article><span>5</span><h3>Can blind local structural credit improve alignment?</h3><p>Yes, strongly in one specified world.</p></article>
+        <article class="boundary"><span>6</span><h3>Does that rule survive many worlds?</h3><p>Not robustly. That narrows the claim.</p></article>
+      </div>
+    </section>
+
+    <section class="wrap section next-section" id="next">
+      <p class="section-kicker">Next falsification</p>
+      <h2>Stop adding architecture. Explain the boundary.</h2>
+      <p class="lede-small">The immediate scientific question is why the same local rule helps some worlds and hurts others. Spectral gaps, sensor observability, topology, port geometry, basis rotation and conductance heterogeneity are candidate explanatory variables. Only after that boundary is understood does the soma/AIS load-compensation hypothesis deserve center stage.</p>
+      <div class="next-flow" aria-label="Planned experimental sequence">
+        <div><strong>Gate 6B</strong><span>success / failure audit</span></div><b>→</b><div><strong>boundary conditions</strong><span>which worlds support self-organization?</span></div><b>→</b><div><strong>load / AIS gate</strong><span>local output adaptation under changed dendritic load</span></div>
+      </div>
+      <div class="hero-actions">
+        <a class="button primary" href="https://github.com/anttiluode/AnttisNeuron/blob/main/PAPER.md">Read the paper</a>
+        <a class="button" href="https://github.com/anttiluode/AnttisNeuron/blob/main/README.md">Read the research ledger</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <div><strong>AnttisNeuron</strong><span>Physics-inspired, falsification-first, and still very much a synthetic model.</span></div>
+      <div class="footer-links"><a href="https://github.com/anttiluode/AnttisNeuron">GitHub</a><a href="https://github.com/anttiluode/AnttisNeuron/tree/main/results">Receipts</a><a href="https://github.com/anttiluode/AnttisNeuron/tree/main/experiments">Experiments</a></div>
+    </div>
+  </footer>
+  <script src="app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: python -m pip install -e ".[test]"
+      - name: Test repository and site contract
+        run: pytest -q
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Build static artifact
+        run: |
+          rm -rf _site
+          mkdir -p _site/results
+          cp -R site/. _site/
+          cp results/gate2.json _site/results/gate2.json
+          cp results/gate4.json _site/results/gate4.json
+          cp results/gate5.json _site/results/gate5.json
+          cp results/gate5b.json _site/results/gate5b.json
+          cp results/gate6.json _site/results/gate6.json
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
