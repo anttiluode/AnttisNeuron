@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: python -m pip install -e ".[test]"
+      - name: Unit and invariant tests
+        run: pytest -q
+      - name: Scientific gate smoke run
+        run: |
+          python experiments/gate0_oja.py --out /tmp/gate0.json
+          python experiments/gate1_identities.py --out /tmp/gate1.json
+          python experiments/gate2_mode_energy.py --out /tmp/gate2.json
+          python experiments/gate3_temporal_modes.py --out /tmp/gate3.json
+          python experiments/gate4_alignment.py --out /tmp/gate4.json
