@@ -1,24 +1,25 @@
 {
   "aggregate": {
-    "adaptive_beats_frozen_fraction": 0.5,
+    "adaptive_beats_frozen_fraction": 0.4583333333333333,
     "adaptive_beats_shuffled_fraction": 0.375,
-    "adaptive_loses_to_frozen_count": 12,
+    "adaptive_loses_to_frozen_count": 13,
     "adaptive_loses_to_shuffled_count": 15,
-    "adaptive_mean_alignment": 0.6950245167899127,
-    "adaptive_minus_frozen_mean": 0.00886014381067071,
-    "adaptive_minus_frozen_median": -0.005797543218599321,
-    "adaptive_minus_frozen_min": -0.1319093493330894,
-    "adaptive_minus_frozen_q25": -0.04512577933528819,
-    "adaptive_minus_shuffled_mean": -0.028422156268549464,
-    "adaptive_minus_shuffled_median": -0.025931042553347383,
-    "adaptive_minus_shuffled_min": -0.30081895182550555,
-    "adaptive_minus_shuffled_q25": -0.08365939267096661,
-    "frozen_mean_alignment": 0.6861643729792419,
-    "shuffled_mean_alignment": 0.7234466730584622,
-    "uniform_mean_alignment": 0.6861643729792419
+    "adaptive_mean_alignment": 0.9294679129926564,
+    "adaptive_minus_frozen_mean": 0.0004983253901210636,
+    "adaptive_minus_frozen_median": -0.00011750120812242804,
+    "adaptive_minus_frozen_min": -0.30124068160776973,
+    "adaptive_minus_frozen_q25": -0.009976433913935628,
+    "adaptive_minus_shuffled_mean": -0.0030741241500673914,
+    "adaptive_minus_shuffled_median": -0.001563885955984945,
+    "adaptive_minus_shuffled_min": -0.30306185005797714,
+    "adaptive_minus_shuffled_q25": -0.005722218757547276,
+    "frozen_mean_alignment": 0.9289695876025353,
+    "shuffled_mean_alignment": 0.9325420371427237,
+    "uniform_mean_alignment": 0.9289695876025353
   },
+  "alignment_metric": "normalized projection into span of three slowest visible nonuniform physical modes",
   "gate": 6,
-  "interpretation": "predeclared many-world robustness test of the frozen Gate 5 local rule; negative worlds are retained and no positive delta is required by CI",
+  "interpretation": "predeclared many-world robustness test of the frozen Gate 5 local rule; alignment is scored against the slow visible physical subspace so arbitrary basis rotations inside degenerate eigenspaces cannot change the score; negative worlds are retained and no positive delta is required by CI",
   "n_worlds": 24,
   "rule": {
     "burn": 250,
@@ -41,16 +42,16 @@
         70.09425871834749
       ],
       "adaptive_conductance_cv": 0.48616430912040826,
-      "adaptive_heldout_mean_alignment": 0.8450660284885755,
-      "adaptive_heldout_min_alignment": 0.6351445637868951,
-      "adaptive_minus_frozen": -0.014749550268212674,
-      "adaptive_minus_shuffled": 0.005241638110514257,
+      "adaptive_heldout_mean_alignment": 0.9767847264141464,
+      "adaptive_heldout_min_alignment": 0.9743504502679052,
+      "adaptive_minus_frozen": 0.002802504799639949,
+      "adaptive_minus_shuffled": -0.0006067490304417777,
       "adaptive_spectral_radius": 0.9935999999999996,
       "common_tape_digest": "1237946a4a541f4c79d59ecc2143c3856433df617e7b747809ddf7c79a2e59e5",
       "control_tape_digest": "1237946a4a541f4c79d59ecc2143c3856433df617e7b747809ddf7c79a2e59e5",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.8598155787567882,
-      "frozen_heldout_min_alignment": 0.7767124879200642,
+      "frozen_heldout_mean_alignment": 0.9739822216145064,
+      "frozen_heldout_min_alignment": 0.9707305387372471,
       "frozen_spectral_radius": 0.9936000000000006,
       "heldout_angles": [
         11.940622988701916,
@@ -72,8 +73,8 @@
         5,
         1
       ],
-      "shuffled_heldout_mean_alignment": 0.8398243903780612,
-      "shuffled_heldout_min_alignment": 0.6828297590074319,
+      "shuffled_heldout_mean_alignment": 0.9773914754445882,
+      "shuffled_heldout_min_alignment": 0.9717198297409227,
       "shuffled_spectral_radius": 0.9935999999999973,
       "topology_edges": [
         [
@@ -117,7 +118,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.8598155787567882,
+      "uniform_heldout_mean_alignment": 0.9739822216145064,
       "uniform_spectral_radius": 0.9936000000000006,
       "world_index": 0,
       "world_seed": 3852682346
@@ -130,16 +131,16 @@
         76.75057241897002
       ],
       "adaptive_conductance_cv": 0.44773267366887515,
-      "adaptive_heldout_mean_alignment": 0.5623315635932228,
-      "adaptive_heldout_min_alignment": 0.44196379835108196,
-      "adaptive_minus_frozen": -0.045040399945718734,
-      "adaptive_minus_shuffled": -0.05187426240335835,
+      "adaptive_heldout_mean_alignment": 0.9806760879986666,
+      "adaptive_heldout_min_alignment": 0.9657978140164949,
+      "adaptive_minus_frozen": -0.01090660387711817,
+      "adaptive_minus_shuffled": -0.013371191867196264,
       "adaptive_spectral_radius": 0.9936000000000003,
       "common_tape_digest": "c625dd775e3f61c72360f2e847d58be9cd6acaceec9b445418dc19b6bd031e94",
       "control_tape_digest": "c625dd775e3f61c72360f2e847d58be9cd6acaceec9b445418dc19b6bd031e94",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.6073719635389415,
-      "frozen_heldout_min_alignment": 0.5222519305426966,
+      "frozen_heldout_mean_alignment": 0.9915826918757847,
+      "frozen_heldout_min_alignment": 0.9864477275594105,
       "frozen_spectral_radius": 0.9936000000000006,
       "heldout_angles": [
         20.313129302131948,
@@ -161,8 +162,8 @@
         4,
         10
       ],
-      "shuffled_heldout_mean_alignment": 0.6142058259965811,
-      "shuffled_heldout_min_alignment": 0.4981323815295631,
+      "shuffled_heldout_mean_alignment": 0.9940472798658628,
+      "shuffled_heldout_min_alignment": 0.9914574546426844,
       "shuffled_spectral_radius": 0.9936000000000008,
       "topology_edges": [
         [
@@ -206,7 +207,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.6073719635389415,
+      "uniform_heldout_mean_alignment": 0.9915826918757847,
       "uniform_spectral_radius": 0.9936000000000006,
       "world_index": 1,
       "world_seed": 1322900178
@@ -219,16 +220,16 @@
         77.47996784149898
       ],
       "adaptive_conductance_cv": 0.46966360266781293,
-      "adaptive_heldout_mean_alignment": 0.8865772341114381,
-      "adaptive_heldout_min_alignment": 0.7642115850659829,
-      "adaptive_minus_frozen": 0.11815305001098875,
-      "adaptive_minus_shuffled": 0.12423497324489874,
+      "adaptive_heldout_mean_alignment": 0.9954355984017029,
+      "adaptive_heldout_min_alignment": 0.9951685308454377,
+      "adaptive_minus_frozen": 0.002700195173272135,
+      "adaptive_minus_shuffled": -0.0011984142817700327,
       "adaptive_spectral_radius": 0.9936000000000001,
       "common_tape_digest": "ef3de98c29220734949df2ee073dfbc656a5727939f614ff26ae617425152d4f",
       "control_tape_digest": "ef3de98c29220734949df2ee073dfbc656a5727939f614ff26ae617425152d4f",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.7684241841004493,
-      "frozen_heldout_min_alignment": 0.5638285091294265,
+      "frozen_heldout_mean_alignment": 0.9927354032284308,
+      "frozen_heldout_min_alignment": 0.9924232701749003,
       "frozen_spectral_radius": 0.9935999999999994,
       "heldout_angles": [
         15.537000060724917,
@@ -250,8 +251,8 @@
         10,
         1
       ],
-      "shuffled_heldout_mean_alignment": 0.7623422608665393,
-      "shuffled_heldout_min_alignment": 0.582573607945002,
+      "shuffled_heldout_mean_alignment": 0.996634012683473,
+      "shuffled_heldout_min_alignment": 0.9952210559687227,
       "shuffled_spectral_radius": 0.9935999999999989,
       "topology_edges": [
         [
@@ -295,7 +296,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.7684241841004493,
+      "uniform_heldout_mean_alignment": 0.9927354032284308,
       "uniform_spectral_radius": 0.9935999999999994,
       "world_index": 2,
       "world_seed": 3723194105
@@ -308,16 +309,16 @@
         82.67435398116108
       ],
       "adaptive_conductance_cv": 0.38468439376348446,
-      "adaptive_heldout_mean_alignment": 0.685074541176693,
-      "adaptive_heldout_min_alignment": 0.5500956022567067,
-      "adaptive_minus_frozen": -0.04006979674643518,
-      "adaptive_minus_shuffled": -0.07631043240300106,
+      "adaptive_heldout_mean_alignment": 0.8482613160184085,
+      "adaptive_heldout_min_alignment": 0.7169412497939585,
+      "adaptive_minus_frozen": -0.05000482204764567,
+      "adaptive_minus_shuffled": -0.06474279514910486,
       "adaptive_spectral_radius": 0.9935999999999995,
       "common_tape_digest": "ecf4a30e2dab28b24286738ca70c65c1f7bfed55e91447311e8a4410894559de",
       "control_tape_digest": "ecf4a30e2dab28b24286738ca70c65c1f7bfed55e91447311e8a4410894559de",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.7251443379231282,
-      "frozen_heldout_min_alignment": 0.6265548558181997,
+      "frozen_heldout_mean_alignment": 0.8982661380660542,
+      "frozen_heldout_min_alignment": 0.8041220370632182,
       "frozen_spectral_radius": 0.9936,
       "heldout_angles": [
         13.599734390402073,
@@ -339,8 +340,8 @@
         3,
         7
       ],
-      "shuffled_heldout_mean_alignment": 0.761384973579694,
-      "shuffled_heldout_min_alignment": 0.679800260328664,
+      "shuffled_heldout_mean_alignment": 0.9130041111675133,
+      "shuffled_heldout_min_alignment": 0.8257239377691441,
       "shuffled_spectral_radius": 0.9935999999999992,
       "topology_edges": [
         [
@@ -384,7 +385,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.7251443379231282,
+      "uniform_heldout_mean_alignment": 0.8982661380660542,
       "uniform_spectral_radius": 0.9936,
       "world_index": 3,
       "world_seed": 3427690882
@@ -397,16 +398,16 @@
         81.75804731568957
       ],
       "adaptive_conductance_cv": 0.5054719055276995,
-      "adaptive_heldout_mean_alignment": 0.606039142645246,
-      "adaptive_heldout_min_alignment": 0.5726940810265398,
-      "adaptive_minus_frozen": -0.1319093493330894,
-      "adaptive_minus_shuffled": -0.004474989352419967,
+      "adaptive_heldout_mean_alignment": 0.9929211701962881,
+      "adaptive_heldout_min_alignment": 0.9893077137544328,
+      "adaptive_minus_frozen": -0.005511342952240428,
+      "adaptive_minus_shuffled": 0.001676602090906698,
       "adaptive_spectral_radius": 0.9935999999999998,
       "common_tape_digest": "f3d6964cb8ed7636eaa556bb2c1743838605159b9c397a5460577cdf4e4c3d9e",
       "control_tape_digest": "f3d6964cb8ed7636eaa556bb2c1743838605159b9c397a5460577cdf4e4c3d9e",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.7379484919783355,
-      "frozen_heldout_min_alignment": 0.6850829001477037,
+      "frozen_heldout_mean_alignment": 0.9984325131485285,
+      "frozen_heldout_min_alignment": 0.9968752574043727,
       "frozen_spectral_radius": 0.9936000000000014,
       "heldout_angles": [
         22.218543773357037,
@@ -428,8 +429,8 @@
         3,
         7
       ],
-      "shuffled_heldout_mean_alignment": 0.610514131997666,
-      "shuffled_heldout_min_alignment": 0.5460809473610434,
+      "shuffled_heldout_mean_alignment": 0.9912445681053814,
+      "shuffled_heldout_min_alignment": 0.9877948659585473,
       "shuffled_spectral_radius": 0.9935999999999995,
       "topology_edges": [
         [
@@ -473,7 +474,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.7379484919783355,
+      "uniform_heldout_mean_alignment": 0.9984325131485285,
       "uniform_spectral_radius": 0.9936000000000014,
       "world_index": 4,
       "world_seed": 1005754751
@@ -486,16 +487,16 @@
         72.54191965678159
       ],
       "adaptive_conductance_cv": 0.4081899546168267,
-      "adaptive_heldout_mean_alignment": 0.5999586107860452,
-      "adaptive_heldout_min_alignment": 0.5293537612834075,
-      "adaptive_minus_frozen": -0.04538191750399656,
-      "adaptive_minus_shuffled": 0.07071274689834028,
+      "adaptive_heldout_mean_alignment": 0.681198653187945,
+      "adaptive_heldout_min_alignment": 0.610114679361019,
+      "adaptive_minus_frozen": -0.11100971140531868,
+      "adaptive_minus_shuffled": 0.016296753634204353,
       "adaptive_spectral_radius": 0.9935999999999995,
       "common_tape_digest": "f5626ec52ae7a4854f18e01c3a293e6158ba1e447622c199edc6e0e75023a9b0",
       "control_tape_digest": "f5626ec52ae7a4854f18e01c3a293e6158ba1e447622c199edc6e0e75023a9b0",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.6453405282900417,
-      "frozen_heldout_min_alignment": 0.612349938080074,
+      "frozen_heldout_mean_alignment": 0.7922083645932637,
+      "frozen_heldout_min_alignment": 0.7480302747084818,
       "frozen_spectral_radius": 0.9936000000000003,
       "heldout_angles": [
         29.38667081333596,
@@ -517,8 +518,8 @@
         5,
         8
       ],
-      "shuffled_heldout_mean_alignment": 0.5292458638877049,
-      "shuffled_heldout_min_alignment": 0.41498715359830385,
+      "shuffled_heldout_mean_alignment": 0.6649018995537407,
+      "shuffled_heldout_min_alignment": 0.5885165240720123,
       "shuffled_spectral_radius": 0.9935999999999998,
       "topology_edges": [
         [
@@ -562,7 +563,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.6453405282900417,
+      "uniform_heldout_mean_alignment": 0.7922083645932637,
       "uniform_spectral_radius": 0.9936000000000003,
       "world_index": 5,
       "world_seed": 1030040363
@@ -575,16 +576,16 @@
         79.49297653237915
       ],
       "adaptive_conductance_cv": 0.4291567460081445,
-      "adaptive_heldout_mean_alignment": 0.7101177655085226,
-      "adaptive_heldout_min_alignment": 0.6420566481643402,
-      "adaptive_minus_frozen": -0.02736885705286507,
-      "adaptive_minus_shuffled": -0.015742345712885575,
+      "adaptive_heldout_mean_alignment": 0.9909011345189507,
+      "adaptive_heldout_min_alignment": 0.984098256283933,
+      "adaptive_minus_frozen": 0.01551510825898883,
+      "adaptive_minus_shuffled": 0.02389548712604639,
       "adaptive_spectral_radius": 0.9935999999999982,
       "common_tape_digest": "ae41ee0ec043a4fecc65c8ede7041f1becae1a8faef5e982471690a3cc613f70",
       "control_tape_digest": "ae41ee0ec043a4fecc65c8ede7041f1becae1a8faef5e982471690a3cc613f70",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.7374866225613876,
-      "frozen_heldout_min_alignment": 0.7016470499372525,
+      "frozen_heldout_mean_alignment": 0.9753860262599618,
+      "frozen_heldout_min_alignment": 0.9573476692877144,
       "frozen_spectral_radius": 0.9935999999999999,
       "heldout_angles": [
         10.312353297108555,
@@ -606,8 +607,8 @@
         4,
         10
       ],
-      "shuffled_heldout_mean_alignment": 0.7258601112214081,
-      "shuffled_heldout_min_alignment": 0.6865392768314157,
+      "shuffled_heldout_mean_alignment": 0.9670056473929043,
+      "shuffled_heldout_min_alignment": 0.9464544217927486,
       "shuffled_spectral_radius": 0.9936000000000005,
       "topology_edges": [
         [
@@ -651,7 +652,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.7374866225613876,
+      "uniform_heldout_mean_alignment": 0.9753860262599618,
       "uniform_spectral_radius": 0.9935999999999999,
       "world_index": 6,
       "world_seed": 1253372107
@@ -664,16 +665,16 @@
         74.47453800138958
       ],
       "adaptive_conductance_cv": 0.4712274983236145,
-      "adaptive_heldout_mean_alignment": 0.738023626954049,
-      "adaptive_heldout_min_alignment": 0.5594490578030136,
-      "adaptive_minus_frozen": 0.03887972512780902,
-      "adaptive_minus_shuffled": -0.03725358438051085,
+      "adaptive_heldout_mean_alignment": 0.9922293078541449,
+      "adaptive_heldout_min_alignment": 0.9845046482750409,
+      "adaptive_minus_frozen": 0.01401598765289136,
+      "adaptive_minus_shuffled": -0.003993183059777472,
       "adaptive_spectral_radius": 0.9936000000000003,
       "common_tape_digest": "b3949b8689e1dc4ef07a2408aae3655fe84999a36b3014c5f7296471bd7a20d2",
       "control_tape_digest": "b3949b8689e1dc4ef07a2408aae3655fe84999a36b3014c5f7296471bd7a20d2",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.69914390182624,
-      "frozen_heldout_min_alignment": 0.36640573002228144,
+      "frozen_heldout_mean_alignment": 0.9782133202012535,
+      "frozen_heldout_min_alignment": 0.9670000098889902,
       "frozen_spectral_radius": 0.9935999999999999,
       "heldout_angles": [
         11.722962062228504,
@@ -695,8 +696,8 @@
         5,
         4
       ],
-      "shuffled_heldout_mean_alignment": 0.7752772113345598,
-      "shuffled_heldout_min_alignment": 0.5540799233454755,
+      "shuffled_heldout_mean_alignment": 0.9962224909139223,
+      "shuffled_heldout_min_alignment": 0.9937973871655353,
       "shuffled_spectral_radius": 0.9936000000000008,
       "topology_edges": [
         [
@@ -740,7 +741,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.69914390182624,
+      "uniform_heldout_mean_alignment": 0.9782133202012535,
       "uniform_spectral_radius": 0.9935999999999999,
       "world_index": 7,
       "world_seed": 2176072552
@@ -753,16 +754,16 @@
         79.3802501752494
       ],
       "adaptive_conductance_cv": 0.41199946565646844,
-      "adaptive_heldout_mean_alignment": 0.7897907165923124,
-      "adaptive_heldout_min_alignment": 0.40372651410781635,
-      "adaptive_minus_frozen": -0.0403452706493147,
-      "adaptive_minus_shuffled": -0.10570627347486328,
+      "adaptive_heldout_mean_alignment": 0.9964159714136679,
+      "adaptive_heldout_min_alignment": 0.9931765937471831,
+      "adaptive_minus_frozen": 0.000255489879771309,
+      "adaptive_minus_shuffled": 0.004135757602635848,
       "adaptive_spectral_radius": 0.9935999999999996,
       "common_tape_digest": "d9696ffb34e538523d39c22781939f7fa85563a3d8ceec073470a09d0c3ac6e0",
       "control_tape_digest": "d9696ffb34e538523d39c22781939f7fa85563a3d8ceec073470a09d0c3ac6e0",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.8301359872416271,
-      "frozen_heldout_min_alignment": 0.7030423578204816,
+      "frozen_heldout_mean_alignment": 0.9961604815338966,
+      "frozen_heldout_min_alignment": 0.9929948270341963,
       "frozen_spectral_radius": 0.993600000000001,
       "heldout_angles": [
         23.390310661272373,
@@ -784,8 +785,8 @@
         4,
         6
       ],
-      "shuffled_heldout_mean_alignment": 0.8954969900671756,
-      "shuffled_heldout_min_alignment": 0.804203224336472,
+      "shuffled_heldout_mean_alignment": 0.992280213811032,
+      "shuffled_heldout_min_alignment": 0.986807094733765,
       "shuffled_spectral_radius": 0.9936000000000035,
       "topology_edges": [
         [
@@ -829,7 +830,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.8301359872416271,
+      "uniform_heldout_mean_alignment": 0.9961604815338966,
       "uniform_spectral_radius": 0.993600000000001,
       "world_index": 8,
       "world_seed": 3542854633
@@ -842,16 +843,16 @@
         81.7547237555044
       ],
       "adaptive_conductance_cv": 0.4777473469064272,
-      "adaptive_heldout_mean_alignment": 0.5137637555193624,
-      "adaptive_heldout_min_alignment": 0.3900389748865329,
-      "adaptive_minus_frozen": -0.03406221650278718,
-      "adaptive_minus_shuffled": -0.30081895182550555,
+      "adaptive_heldout_mean_alignment": 0.9911488148651048,
+      "adaptive_heldout_min_alignment": 0.9758782824812587,
+      "adaptive_minus_frozen": -0.0071709148201116735,
+      "adaptive_minus_shuffled": -0.006429004757264933,
       "adaptive_spectral_radius": 0.9936,
       "common_tape_digest": "f7c6251b85dcc12d47ebefb31d10eadf9efefc8be2d2b7ffff9d00e70e666cec",
       "control_tape_digest": "f7c6251b85dcc12d47ebefb31d10eadf9efefc8be2d2b7ffff9d00e70e666cec",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.5478259720221496,
-      "frozen_heldout_min_alignment": 0.4861778566714154,
+      "frozen_heldout_mean_alignment": 0.9983197296852164,
+      "frozen_heldout_min_alignment": 0.9967357130511583,
       "frozen_spectral_radius": 0.9936000000000011,
       "heldout_angles": [
         29.139889893664048,
@@ -873,8 +874,8 @@
         7,
         3
       ],
-      "shuffled_heldout_mean_alignment": 0.8145827073448679,
-      "shuffled_heldout_min_alignment": 0.6534591144651929,
+      "shuffled_heldout_mean_alignment": 0.9975778196223697,
+      "shuffled_heldout_min_alignment": 0.9955665035358368,
       "shuffled_spectral_radius": 0.9936000000000005,
       "topology_edges": [
         [
@@ -918,7 +919,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.5478259720221496,
+      "uniform_heldout_mean_alignment": 0.9983197296852164,
       "uniform_spectral_radius": 0.9936000000000011,
       "world_index": 9,
       "world_seed": 3641565284
@@ -931,16 +932,16 @@
         80.58579865496887
       ],
       "adaptive_conductance_cv": 0.4368133576547167,
-      "adaptive_heldout_mean_alignment": 0.8816192954683032,
-      "adaptive_heldout_min_alignment": 0.8087937389844417,
-      "adaptive_minus_frozen": 0.09772110355875674,
-      "adaptive_minus_shuffled": 0.073995233680621,
+      "adaptive_heldout_mean_alignment": 0.9033016693783378,
+      "adaptive_heldout_min_alignment": 0.8392857257786542,
+      "adaptive_minus_frozen": 0.10774673348172581,
+      "adaptive_minus_shuffled": 0.08126726724717792,
       "adaptive_spectral_radius": 0.9936000000000015,
       "common_tape_digest": "2d7c0fe1a3ddbf9157e7cbd6c1b778d953b1e55b9b63d3d91f85ad4be00ef57b",
       "control_tape_digest": "2d7c0fe1a3ddbf9157e7cbd6c1b778d953b1e55b9b63d3d91f85ad4be00ef57b",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.7838981919095465,
-      "frozen_heldout_min_alignment": 0.6966601591158803,
+      "frozen_heldout_mean_alignment": 0.795554935896612,
+      "frozen_heldout_min_alignment": 0.7088879708973956,
       "frozen_spectral_radius": 0.9935999999999995,
       "heldout_angles": [
         30.873812238651073,
@@ -962,8 +963,8 @@
         6,
         1
       ],
-      "shuffled_heldout_mean_alignment": 0.8076240617876822,
-      "shuffled_heldout_min_alignment": 0.7303163748088948,
+      "shuffled_heldout_mean_alignment": 0.8220344021311599,
+      "shuffled_heldout_min_alignment": 0.7327330898114601,
       "shuffled_spectral_radius": 0.9936000000000004,
       "topology_edges": [
         [
@@ -1007,7 +1008,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.7838981919095465,
+      "uniform_heldout_mean_alignment": 0.795554935896612,
       "uniform_spectral_radius": 0.9935999999999995,
       "world_index": 10,
       "world_seed": 3464136445
@@ -1020,16 +1021,16 @@
         74.90759419328374
       ],
       "adaptive_conductance_cv": 0.4738679252528018,
-      "adaptive_heldout_mean_alignment": 0.3340717341375697,
-      "adaptive_heldout_min_alignment": 0.2678573155340399,
-      "adaptive_minus_frozen": 0.11586573762347965,
-      "adaptive_minus_shuffled": 0.0962730160947031,
+      "adaptive_heldout_mean_alignment": 0.7403958500511355,
+      "adaptive_heldout_min_alignment": 0.5778713682930134,
+      "adaptive_minus_frozen": 0.3435117675800847,
+      "adaptive_minus_shuffled": 0.1963646630702196,
       "adaptive_spectral_radius": 0.9936000000000009,
       "common_tape_digest": "4cd16b2ecaa247aa1a50b6c7f6db29960f9d31c8ea24159fb8c6f02c82e0e89c",
       "control_tape_digest": "4cd16b2ecaa247aa1a50b6c7f6db29960f9d31c8ea24159fb8c6f02c82e0e89c",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.21820599651409003,
-      "frozen_heldout_min_alignment": 0.12923230875267258,
+      "frozen_heldout_mean_alignment": 0.3968840824710508,
+      "frozen_heldout_min_alignment": 0.16149717056716345,
       "frozen_spectral_radius": 0.9935999999999997,
       "heldout_angles": [
         25.74566200318521,
@@ -1051,8 +1052,8 @@
         8,
         9
       ],
-      "shuffled_heldout_mean_alignment": 0.2377987180428666,
-      "shuffled_heldout_min_alignment": 0.1883425801479147,
+      "shuffled_heldout_mean_alignment": 0.5440311869809159,
+      "shuffled_heldout_min_alignment": 0.391757512940562,
       "shuffled_spectral_radius": 0.9935999999999995,
       "topology_edges": [
         [
@@ -1096,7 +1097,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.21820599651409003,
+      "uniform_heldout_mean_alignment": 0.3968840824710508,
       "uniform_spectral_radius": 0.9935999999999997,
       "world_index": 11,
       "world_seed": 1868454829
@@ -1109,16 +1110,16 @@
         82.01254420916723
       ],
       "adaptive_conductance_cv": 0.4312094989210042,
-      "adaptive_heldout_mean_alignment": 0.7653662075850222,
-      "adaptive_heldout_min_alignment": 0.48168028390914386,
-      "adaptive_minus_frozen": -0.10039719977689388,
-      "adaptive_minus_shuffled": -0.12422626850650476,
+      "adaptive_heldout_mean_alignment": 0.9956011591260282,
+      "adaptive_heldout_min_alignment": 0.9911144857292234,
+      "adaptive_minus_frozen": -0.0018187819285152562,
+      "adaptive_minus_shuffled": -0.0019293576301998572,
       "adaptive_spectral_radius": 0.9936000000000007,
       "common_tape_digest": "eec94ca141e7c8d629f17dff9d0fcad0cdfb3b696f9ef03b03fbf33cb842b82c",
       "control_tape_digest": "eec94ca141e7c8d629f17dff9d0fcad0cdfb3b696f9ef03b03fbf33cb842b82c",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.865763407361916,
-      "frozen_heldout_min_alignment": 0.6217566907212806,
+      "frozen_heldout_mean_alignment": 0.9974199410545435,
+      "frozen_heldout_min_alignment": 0.9942276024241781,
       "frozen_spectral_radius": 0.9936000000000003,
       "heldout_angles": [
         33.770940882573676,
@@ -1140,8 +1141,8 @@
         10,
         4
       ],
-      "shuffled_heldout_mean_alignment": 0.8895924760915269,
-      "shuffled_heldout_min_alignment": 0.6182714477875573,
+      "shuffled_heldout_mean_alignment": 0.9975305167562281,
+      "shuffled_heldout_min_alignment": 0.9942617500047458,
       "shuffled_spectral_radius": 0.9936000000000015,
       "topology_edges": [
         [
@@ -1185,7 +1186,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.865763407361916,
+      "uniform_heldout_mean_alignment": 0.9974199410545435,
       "uniform_spectral_radius": 0.9936000000000003,
       "world_index": 12,
       "world_seed": 927466591
@@ -1198,16 +1199,16 @@
         80.55627647316481
       ],
       "adaptive_conductance_cv": 0.4394304089496079,
-      "adaptive_heldout_mean_alignment": 0.7074235047220082,
-      "adaptive_heldout_min_alignment": 0.5419870549383642,
-      "adaptive_minus_frozen": 0.07739197284495747,
-      "adaptive_minus_shuffled": 0.06401741497556057,
+      "adaptive_heldout_mean_alignment": 0.9783523590031494,
+      "adaptive_heldout_min_alignment": 0.9534151886914903,
+      "adaptive_minus_frozen": -0.012093539885758453,
+      "adaptive_minus_shuffled": 0.006147664134900865,
       "adaptive_spectral_radius": 0.9935999999999992,
       "common_tape_digest": "242336e882025bd5a954749f3187a8b710dd9b136d682c701f0638b21f9dab78",
       "control_tape_digest": "242336e882025bd5a954749f3187a8b710dd9b136d682c701f0638b21f9dab78",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.6300315318770507,
-      "frozen_heldout_min_alignment": 0.5819766873697991,
+      "frozen_heldout_mean_alignment": 0.9904458988889079,
+      "frozen_heldout_min_alignment": 0.9889411803949743,
       "frozen_spectral_radius": 0.9936000000000003,
       "heldout_angles": [
         31.4298408881444,
@@ -1229,8 +1230,8 @@
         5,
         7
       ],
-      "shuffled_heldout_mean_alignment": 0.6434060897464476,
-      "shuffled_heldout_min_alignment": 0.5610661447046608,
+      "shuffled_heldout_mean_alignment": 0.9722046948682486,
+      "shuffled_heldout_min_alignment": 0.9638629742523388,
       "shuffled_spectral_radius": 0.9936000000000008,
       "topology_edges": [
         [
@@ -1274,7 +1275,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.6300315318770507,
+      "uniform_heldout_mean_alignment": 0.9904458988889079,
       "uniform_spectral_radius": 0.9936000000000003,
       "world_index": 13,
       "world_seed": 4106575964
@@ -1287,16 +1288,16 @@
         64.72297513971805
       ],
       "adaptive_conductance_cv": 0.40012352725965616,
-      "adaptive_heldout_mean_alignment": 0.6614205682979409,
-      "adaptive_heldout_min_alignment": 0.4058329325046068,
-      "adaptive_minus_frozen": -0.05693811720140696,
-      "adaptive_minus_shuffled": -0.11269162492254126,
+      "adaptive_heldout_mean_alignment": 0.6946018333842015,
+      "adaptive_heldout_min_alignment": 0.43114781595824736,
+      "adaptive_minus_frozen": -0.30124068160776973,
+      "adaptive_minus_shuffled": -0.30306185005797714,
       "adaptive_spectral_radius": 0.9935999999999994,
       "common_tape_digest": "02d6d12ee9634c122a6b0fed0b5e018654a7de250bba744542ebbfd1a4ea8adb",
       "control_tape_digest": "02d6d12ee9634c122a6b0fed0b5e018654a7de250bba744542ebbfd1a4ea8adb",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.7183586854993479,
-      "frozen_heldout_min_alignment": 0.5808056238147443,
+      "frozen_heldout_mean_alignment": 0.9958425149919712,
+      "frozen_heldout_min_alignment": 0.9927222157944614,
       "frozen_spectral_radius": 0.993600000000001,
       "heldout_angles": [
         31.121914643784947,
@@ -1318,8 +1319,8 @@
         2,
         9
       ],
-      "shuffled_heldout_mean_alignment": 0.7741121932204822,
-      "shuffled_heldout_min_alignment": 0.6172677101134081,
+      "shuffled_heldout_mean_alignment": 0.9976636834421786,
+      "shuffled_heldout_min_alignment": 0.9948736680525392,
       "shuffled_spectral_radius": 0.9935999999999998,
       "topology_edges": [
         [
@@ -1363,7 +1364,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.7183586854993479,
+      "uniform_heldout_mean_alignment": 0.9958425149919712,
       "uniform_spectral_radius": 0.993600000000001,
       "world_index": 14,
       "world_seed": 3213209444
@@ -1376,16 +1377,16 @@
         81.80395491978386
       ],
       "adaptive_conductance_cv": 0.3500859990014888,
-      "adaptive_heldout_mean_alignment": 0.7630090157036463,
-      "adaptive_heldout_min_alignment": 0.6271411906867044,
-      "adaptive_minus_frozen": 0.07492361558790595,
-      "adaptive_minus_shuffled": -0.15702168926685545,
+      "adaptive_heldout_mean_alignment": 0.9928444122860783,
+      "adaptive_heldout_min_alignment": 0.9684837545276851,
+      "adaptive_minus_frozen": -0.003978434244375273,
+      "adaptive_minus_shuffled": -0.002517628574414288,
       "adaptive_spectral_radius": 0.9935999999999985,
       "common_tape_digest": "8030278a5fdb64e1bc0eb496f6fb4568ed6bb08c7069819ec97ce38f49b25018",
       "control_tape_digest": "8030278a5fdb64e1bc0eb496f6fb4568ed6bb08c7069819ec97ce38f49b25018",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.6880854001157404,
-      "frozen_heldout_min_alignment": 0.6317330294583547,
+      "frozen_heldout_mean_alignment": 0.9968228465304536,
+      "frozen_heldout_min_alignment": 0.9847410285695608,
       "frozen_spectral_radius": 0.9935999999999998,
       "heldout_angles": [
         20.328277296558372,
@@ -1407,8 +1408,8 @@
         3,
         8
       ],
-      "shuffled_heldout_mean_alignment": 0.9200307049705018,
-      "shuffled_heldout_min_alignment": 0.8818289325257936,
+      "shuffled_heldout_mean_alignment": 0.9953620408604926,
+      "shuffled_heldout_min_alignment": 0.9784709431733699,
       "shuffled_spectral_radius": 0.9936,
       "topology_edges": [
         [
@@ -1452,7 +1453,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.6880854001157404,
+      "uniform_heldout_mean_alignment": 0.9968228465304536,
       "uniform_spectral_radius": 0.9935999999999998,
       "world_index": 15,
       "world_seed": 2539776275
@@ -1465,16 +1466,16 @@
         80.55114888345268
       ],
       "adaptive_conductance_cv": 0.4238160872877227,
-      "adaptive_heldout_mean_alignment": 0.9334196817618432,
-      "adaptive_heldout_min_alignment": 0.8647397773371746,
-      "adaptive_minus_frozen": 0.05787979998030113,
-      "adaptive_minus_shuffled": -0.0004747212449570659,
+      "adaptive_heldout_mean_alignment": 0.995900227206479,
+      "adaptive_heldout_min_alignment": 0.9884947324074753,
+      "adaptive_minus_frozen": 0.0004547964276626626,
+      "adaptive_minus_shuffled": -0.0019296714445543595,
       "adaptive_spectral_radius": 0.9936000000000004,
       "common_tape_digest": "3ae0d6ed207c68e7a4bbd46209b2999c5a56b5f2d7422e0f0ede74fea5f81d1b",
       "control_tape_digest": "3ae0d6ed207c68e7a4bbd46209b2999c5a56b5f2d7422e0f0ede74fea5f81d1b",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.8755398817815421,
-      "frozen_heldout_min_alignment": 0.7315040964881628,
+      "frozen_heldout_mean_alignment": 0.9954454307788163,
+      "frozen_heldout_min_alignment": 0.9899195574249485,
       "frozen_spectral_radius": 0.9935999999999998,
       "heldout_angles": [
         19.890713897546206,
@@ -1496,8 +1497,8 @@
         6,
         8
       ],
-      "shuffled_heldout_mean_alignment": 0.9338944030068003,
-      "shuffled_heldout_min_alignment": 0.8256683025405869,
+      "shuffled_heldout_mean_alignment": 0.9978298986510333,
+      "shuffled_heldout_min_alignment": 0.9914382398711368,
       "shuffled_spectral_radius": 0.9935999999999999,
       "topology_edges": [
         [
@@ -1541,7 +1542,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.8755398817815421,
+      "uniform_heldout_mean_alignment": 0.9954454307788163,
       "uniform_spectral_radius": 0.9935999999999998,
       "world_index": 16,
       "world_seed": 3114022784
@@ -1554,16 +1555,16 @@
         82.27125413282764
       ],
       "adaptive_conductance_cv": 0.5023474164195725,
-      "adaptive_heldout_mean_alignment": 0.5895494990068666,
-      "adaptive_heldout_min_alignment": 0.442102892448565,
-      "adaptive_minus_frozen": 0.030049630999064658,
-      "adaptive_minus_shuffled": -0.03611973939380919,
+      "adaptive_heldout_mean_alignment": 0.9930794188837636,
+      "adaptive_heldout_min_alignment": 0.9762942304656431,
+      "adaptive_minus_frozen": -0.00010908783216934115,
+      "adaptive_minus_shuffled": -0.002416709646152704,
       "adaptive_spectral_radius": 0.9936000000000005,
       "common_tape_digest": "31052353c9dfe39c841fbdf91cd9749d5e41875879879e57a26aa1ef759eb216",
       "control_tape_digest": "31052353c9dfe39c841fbdf91cd9749d5e41875879879e57a26aa1ef759eb216",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.5594998680078019,
-      "frozen_heldout_min_alignment": 0.3822005551991828,
+      "frozen_heldout_mean_alignment": 0.993188506715933,
+      "frozen_heldout_min_alignment": 0.9852472868206342,
       "frozen_spectral_radius": 0.9935999999999995,
       "heldout_angles": [
         16.166512891536303,
@@ -1585,8 +1586,8 @@
         5,
         9
       ],
-      "shuffled_heldout_mean_alignment": 0.6256692384006758,
-      "shuffled_heldout_min_alignment": 0.4921243651279493,
+      "shuffled_heldout_mean_alignment": 0.9954961285299163,
+      "shuffled_heldout_min_alignment": 0.9890360509755057,
       "shuffled_spectral_radius": 0.9935999999999997,
       "topology_edges": [
         [
@@ -1630,7 +1631,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.5594998680078019,
+      "uniform_heldout_mean_alignment": 0.993188506715933,
       "uniform_spectral_radius": 0.9935999999999995,
       "world_index": 17,
       "world_seed": 1163372937
@@ -1643,16 +1644,16 @@
         66.95138732959748
       ],
       "adaptive_conductance_cv": 0.4063412766940732,
-      "adaptive_heldout_mean_alignment": 0.8283834182987837,
-      "adaptive_heldout_min_alignment": 0.6408757658296259,
-      "adaptive_minus_frozen": -0.06727277224286488,
-      "adaptive_minus_shuffled": -0.058077847366455715,
+      "adaptive_heldout_mean_alignment": 0.9987500172437336,
+      "adaptive_heldout_min_alignment": 0.9971978747671709,
+      "adaptive_minus_frozen": 0.0007594320011076183,
+      "adaptive_minus_shuffled": 0.0012681031829324674,
       "adaptive_spectral_radius": 0.9935999999999993,
       "common_tape_digest": "ae95ed4be9869588b92f2035606f0de72e359a68d360180ed28d872f91ed3b43",
       "control_tape_digest": "ae95ed4be9869588b92f2035606f0de72e359a68d360180ed28d872f91ed3b43",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.8956561905416486,
-      "frozen_heldout_min_alignment": 0.8389971016997885,
+      "frozen_heldout_mean_alignment": 0.997990585242626,
+      "frozen_heldout_min_alignment": 0.9956520510549537,
       "frozen_spectral_radius": 0.9935999999999998,
       "heldout_angles": [
         31.835002364551606,
@@ -1674,8 +1675,8 @@
         9,
         10
       ],
-      "shuffled_heldout_mean_alignment": 0.8864612656652394,
-      "shuffled_heldout_min_alignment": 0.8253699059456497,
+      "shuffled_heldout_mean_alignment": 0.9974819140608011,
+      "shuffled_heldout_min_alignment": 0.9949737837006047,
       "shuffled_spectral_radius": 0.9935999999999994,
       "topology_edges": [
         [
@@ -1719,7 +1720,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.8956561905416486,
+      "uniform_heldout_mean_alignment": 0.997990585242626,
       "uniform_spectral_radius": 0.9935999999999998,
       "world_index": 18,
       "world_seed": 1243098431
@@ -1732,16 +1733,16 @@
         79.54104467341382
       ],
       "adaptive_conductance_cv": 0.4490429666660735,
-      "adaptive_heldout_mean_alignment": 0.6939651414934966,
-      "adaptive_heldout_min_alignment": 0.6575128367471677,
-      "adaptive_minus_frozen": 0.09090299400732582,
-      "adaptive_minus_shuffled": 0.07437646786273111,
+      "adaptive_heldout_mean_alignment": 0.9875015974925552,
+      "adaptive_heldout_min_alignment": 0.9797143362452558,
+      "adaptive_minus_frozen": -0.009666377259541448,
+      "adaptive_minus_shuffled": -0.005486623424308057,
       "adaptive_spectral_radius": 0.9936000000000005,
       "common_tape_digest": "46eda4e036f3706ee0e93f7753d5853d3035c46a5a4838f2504d97159994f2f2",
       "control_tape_digest": "46eda4e036f3706ee0e93f7753d5853d3035c46a5a4838f2504d97159994f2f2",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.6030621474861708,
-      "frozen_heldout_min_alignment": 0.4774704061892833,
+      "frozen_heldout_mean_alignment": 0.9971679747520966,
+      "frozen_heldout_min_alignment": 0.9942999541524015,
       "frozen_spectral_radius": 0.9936000000000004,
       "heldout_angles": [
         32.13986677222549,
@@ -1763,8 +1764,8 @@
         10,
         9
       ],
-      "shuffled_heldout_mean_alignment": 0.6195886736307655,
-      "shuffled_heldout_min_alignment": 0.46141545853670596,
+      "shuffled_heldout_mean_alignment": 0.9929882209168632,
+      "shuffled_heldout_min_alignment": 0.9871947286605339,
       "shuffled_spectral_radius": 0.9935999999999997,
       "topology_edges": [
         [
@@ -1808,7 +1809,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.6030621474861708,
+      "uniform_heldout_mean_alignment": 0.9971679747520966,
       "uniform_spectral_radius": 0.9936000000000004,
       "world_index": 19,
       "world_seed": 2942441180
@@ -1821,16 +1822,16 @@
         79.35254516845694
       ],
       "adaptive_conductance_cv": 0.40786583096416223,
-      "adaptive_heldout_mean_alignment": 0.7387304928445904,
-      "adaptive_heldout_min_alignment": 0.5323005838499657,
-      "adaptive_minus_frozen": 0.07289771940458767,
-      "adaptive_minus_shuffled": 0.03948560797920886,
+      "adaptive_heldout_mean_alignment": 0.9980317634525022,
+      "adaptive_heldout_min_alignment": 0.9967282494696991,
+      "adaptive_minus_frozen": -0.00012591458407551492,
+      "adaptive_minus_shuffled": -0.000546791604880914,
       "adaptive_spectral_radius": 0.9935999999999996,
       "common_tape_digest": "a4e55e8b9e89f0e5e6df60fe324fa20fb63f691324d6e674f63d089063410e04",
       "control_tape_digest": "a4e55e8b9e89f0e5e6df60fe324fa20fb63f691324d6e674f63d089063410e04",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.6658327734400027,
-      "frozen_heldout_min_alignment": 0.5250946363474172,
+      "frozen_heldout_mean_alignment": 0.9981576780365777,
+      "frozen_heldout_min_alignment": 0.9975876304929635,
       "frozen_spectral_radius": 0.9936000000000011,
       "heldout_angles": [
         22.936181563753674,
@@ -1852,8 +1853,8 @@
         4,
         7
       ],
-      "shuffled_heldout_mean_alignment": 0.6992448848653815,
-      "shuffled_heldout_min_alignment": 0.5582912649977738,
+      "shuffled_heldout_mean_alignment": 0.9985785550573831,
+      "shuffled_heldout_min_alignment": 0.9979547780025496,
       "shuffled_spectral_radius": 0.9935999999999988,
       "topology_edges": [
         [
@@ -1897,7 +1898,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.6658327734400027,
+      "uniform_heldout_mean_alignment": 0.9981576780365777,
       "uniform_spectral_radius": 0.9936000000000011,
       "world_index": 20,
       "world_seed": 3510175734
@@ -1910,16 +1911,16 @@
         70.43683344791548
       ],
       "adaptive_conductance_cv": 0.48049851497226387,
-      "adaptive_heldout_mean_alignment": 0.5635354784826968,
-      "adaptive_heldout_min_alignment": 0.5175709468306474,
-      "adaptive_minus_frozen": -0.0691617444133813,
-      "adaptive_minus_shuffled": -0.12852319659864597,
+      "adaptive_heldout_mean_alignment": 0.9609884965147577,
+      "adaptive_heldout_min_alignment": 0.9439031599261658,
+      "adaptive_minus_frozen": -0.010934796617139475,
+      "adaptive_minus_shuffled": -0.011044813223731076,
       "adaptive_spectral_radius": 0.9936000000000009,
       "common_tape_digest": "e4842f7cd951027838312d48fa86112827b3a8436f5da6d154a48ddbc5ea3c42",
       "control_tape_digest": "e4842f7cd951027838312d48fa86112827b3a8436f5da6d154a48ddbc5ea3c42",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.6326972228960781,
-      "frozen_heldout_min_alignment": 0.5589475424888969,
+      "frozen_heldout_mean_alignment": 0.9719232931318972,
+      "frozen_heldout_min_alignment": 0.9585941773501904,
       "frozen_spectral_radius": 0.9935999999999996,
       "heldout_angles": [
         17.09298499491565,
@@ -1941,8 +1942,8 @@
         7,
         3
       ],
-      "shuffled_heldout_mean_alignment": 0.6920586750813428,
-      "shuffled_heldout_min_alignment": 0.6256555213562581,
+      "shuffled_heldout_mean_alignment": 0.9720333097384888,
+      "shuffled_heldout_min_alignment": 0.9570650972902078,
       "shuffled_spectral_radius": 0.9936000000000014,
       "topology_edges": [
         [
@@ -1986,7 +1987,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.6326972228960781,
+      "uniform_heldout_mean_alignment": 0.9719232931318972,
       "uniform_spectral_radius": 0.9935999999999996,
       "world_index": 21,
       "world_seed": 246860598
@@ -1999,16 +2000,16 @@
         66.6645391233843
       ],
       "adaptive_conductance_cv": 0.4320877936197448,
-      "adaptive_heldout_mean_alignment": 0.4974602768627808,
-      "adaptive_heldout_min_alignment": 0.44218544592019204,
-      "adaptive_minus_frozen": 0.10752083011687269,
-      "adaptive_minus_shuffled": 0.04438155020088891,
+      "adaptive_heldout_mean_alignment": 0.6249419864846889,
+      "adaptive_heldout_min_alignment": 0.5541185091836629,
+      "adaptive_minus_frozen": 0.04266694735790766,
+      "adaptive_minus_shuffled": -0.012506255120235621,
       "adaptive_spectral_radius": 0.9936000000000003,
       "common_tape_digest": "33b5140c73a4071157037a46bb23d1b9cda3759be0a3bf5630347deeeaee9939",
       "control_tape_digest": "33b5140c73a4071157037a46bb23d1b9cda3759be0a3bf5630347deeeaee9939",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.38993944674590814,
-      "frozen_heldout_min_alignment": 0.3564272933169985,
+      "frozen_heldout_mean_alignment": 0.5822750391267812,
+      "frozen_heldout_min_alignment": 0.5352987131465139,
       "frozen_spectral_radius": 0.9935999999999996,
       "heldout_angles": [
         26.817963718505283,
@@ -2030,8 +2031,8 @@
         2,
         1
       ],
-      "shuffled_heldout_mean_alignment": 0.4530787266618919,
-      "shuffled_heldout_min_alignment": 0.3666166610972741,
+      "shuffled_heldout_mean_alignment": 0.6374482416049245,
+      "shuffled_heldout_min_alignment": 0.6046560775407828,
       "shuffled_spectral_radius": 0.9935999999999999,
       "topology_edges": [
         [
@@ -2075,7 +2076,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.38993944674590814,
+      "uniform_heldout_mean_alignment": 0.5822750391267812,
       "uniform_spectral_radius": 0.9935999999999996,
       "world_index": 22,
       "world_seed": 3559909381
@@ -2088,16 +2089,16 @@
         73.95321027215893
       ],
       "adaptive_conductance_cv": 0.48738973051167,
-      "adaptive_heldout_mean_alignment": 0.7858911029168911,
-      "adaptive_heldout_min_alignment": 0.7230113476691867,
-      "adaptive_minus_frozen": 0.0031544638310140316,
-      "adaptive_minus_shuffled": -0.06553447264033996,
+      "adaptive_heldout_mean_alignment": 0.9969663404473164,
+      "adaptive_heldout_min_alignment": 0.9926985289664352,
+      "adaptive_minus_frozen": 0.006101855811632584,
+      "adaptive_minus_shuffled": 0.026949761181367826,
       "adaptive_spectral_radius": 0.993600000000001,
       "common_tape_digest": "c03d917e1f7d9ea02cc69f70eb69ff6e5379f01ac703f80310cf27bacd93ef3b",
       "control_tape_digest": "c03d917e1f7d9ea02cc69f70eb69ff6e5379f01ac703f80310cf27bacd93ef3b",
       "control_update_multiset_max_error": 0.0,
-      "frozen_heldout_mean_alignment": 0.7827366390858771,
-      "frozen_heldout_min_alignment": 0.7686836532671305,
+      "frozen_heldout_mean_alignment": 0.9908644846356838,
+      "frozen_heldout_min_alignment": 0.9799492980653225,
       "frozen_spectral_radius": 0.9936,
       "heldout_angles": [
         11.994093495965434,
@@ -2119,8 +2120,8 @@
         10,
         7
       ],
-      "shuffled_heldout_mean_alignment": 0.8514255755572311,
-      "shuffled_heldout_min_alignment": 0.8345689957988142,
+      "shuffled_heldout_mean_alignment": 0.9700165792659485,
+      "shuffled_heldout_min_alignment": 0.9110783798892503,
       "shuffled_spectral_radius": 0.9935999999999999,
       "topology_edges": [
         [
@@ -2164,7 +2165,7 @@
           10
         ]
       ],
-      "uniform_heldout_mean_alignment": 0.7827366390858771,
+      "uniform_heldout_mean_alignment": 0.9908644846356838,
       "uniform_spectral_radius": 0.9936,
       "world_index": 23,
       "world_seed": 1288421885
