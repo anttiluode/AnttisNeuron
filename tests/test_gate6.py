@@ -19,7 +19,7 @@ def _finite(value):
 
 
 def test_gate6_subspace_alignment_is_basis_rotation_invariant():
-    basis = np.eye(4)[:, :3]
+    basis = np.eye(4)[:3, :]
     theta = 0.731
     rotation = np.array(
         [
@@ -28,7 +28,7 @@ def test_gate6_subspace_alignment_is_basis_rotation_invariant():
             [0.0, 0.0, 1.0],
         ]
     )
-    rotated = basis @ rotation
+    rotated = rotation @ basis
     vector = np.array([0.2, -0.5, 0.3, 0.7])
 
     score = _subspace_alignment(vector, basis)
