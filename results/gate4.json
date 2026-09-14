@@ -1,0 +1,11 @@
+{
+  "coupled_alignment": 0.9990103496167464,
+  "delta_alignment": 0.27682710033619806,
+  "fast_eigenvalue": 0.65,
+  "fixed_alignment": 0.7221832492805483,
+  "gate": 4,
+  "interpretation": "existence test; positive delta is not assumed by CI",
+  "no_memory_alignment": 0.7221787536639447,
+  "seed": 17,
+  "slow_eigenvalue": 0.97
+}

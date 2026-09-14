@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anttis-neuron"
+version = "0.1.0"
+description = "Executable study of a spectral two-layer neuron with Oja learning, branch dynamics, and local nonlinearity"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["numpy>=1.26"]
+license = "MIT"
+authors = [{name = "Antti Luode"}]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.setuptools.packages.find]
+include = ["anttis_neuron*", "experiments*"]
+exclude = ["tests*", "results*"]

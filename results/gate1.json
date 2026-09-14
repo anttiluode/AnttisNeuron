@@ -1,0 +1,7 @@
+{
+  "gate": 1,
+  "linear_collapse_max_abs_error": 1.7763568394002505e-15,
+  "quadratic_max_abs_error": 4.263256414560601e-14,
+  "seed": 17,
+  "two_layer_max_abs_error": 0.0
+}
