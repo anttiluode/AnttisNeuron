@@ -133,6 +133,19 @@ def _train_conditions(
     }, float(max(multiset_errors, default=0.0))
 
 
+def trained_world_conductances(world: CableWorld, *, tape_seed: int) -> dict[str, np.ndarray]:
+    """Reproduce Gate-6 condition conductances without running evaluation."""
+    adaptation_tapes, _ = _make_world_tapes(world, tape_seed)
+    q_target = _initial_q_target(world, adaptation_tapes[0])
+    trained, _ = _train_conditions(
+        world,
+        adaptation_tapes,
+        q_target=q_target,
+        seed=tape_seed,
+    )
+    return {name: values.copy() for name, values in trained.items()}
+
+
 def _subspace_alignment(vector: np.ndarray, basis: np.ndarray) -> float:
     """Normalized projection of a vector into a row-basis span.
 
