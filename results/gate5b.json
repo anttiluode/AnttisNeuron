@@ -1,0 +1,119 @@
+{
+  "adapted_slow_nonuniform_eigenvalues": [
+    0.9881552639656477,
+    0.9851095148342839,
+    0.9694118973838687
+  ],
+  "cross_basis_mean_alignments": {
+    "adapted_oja_vs_adapted_modes": 0.9001914311455124,
+    "adapted_oja_vs_frozen_modes": 0.7488896793508257,
+    "frozen_oja_vs_adapted_modes": 0.9033454203916831,
+    "frozen_oja_vs_frozen_modes": 0.7821845260371856
+  },
+  "diagnostic_conditions": {
+    "adapted": {
+      "alignments": [
+        0.8732301919247021,
+        0.8842708282653358,
+        0.9221115700990512,
+        0.9819757888977845,
+        0.8393687765406879
+      ],
+      "mean_alignment": 0.9001914311455124,
+      "median_alignment": 0.8842708282653358,
+      "min_alignment": 0.8393687765406879,
+      "spectral_radius": 0.9936000000000006
+    },
+    "eigenvalue_only": {
+      "alignments": [
+        0.6302933273504165,
+        0.6677783605237102,
+        0.9916600328692874,
+        0.985332195019244,
+        0.7303723733558667
+      ],
+      "mean_alignment": 0.8010872578237048,
+      "median_alignment": 0.7303723733558667,
+      "min_alignment": 0.6302933273504165,
+      "spectral_radius": 0.9935999999999997
+    },
+    "eigenvector_only": {
+      "alignments": [
+        0.8568113380158773,
+        0.8718976382082013,
+        0.9406371556197035,
+        0.9736060535499685,
+        0.8190526190484746
+      ],
+      "mean_alignment": 0.892400960888445,
+      "median_alignment": 0.8718976382082013,
+      "min_alignment": 0.8190526190484746,
+      "spectral_radius": 0.9936000000000003
+    },
+    "frozen": {
+      "alignments": [
+        0.6063645741114085,
+        0.6082805952963326,
+        0.982429975479532,
+        0.972830080081175,
+        0.7410174052174797
+      ],
+      "mean_alignment": 0.7821845260371856,
+      "median_alignment": 0.7410174052174797,
+      "min_alignment": 0.6063645741114085,
+      "spectral_radius": 0.9935999999999996
+    }
+  },
+  "frozen_slow_nonuniform_eigenvalues": [
+    0.9859826076423465,
+    0.9793834098390222,
+    0.9613514309947522
+  ],
+  "gate": "5B",
+  "interpretation": "diagnostic decomposition only; eigenvalue-only and eigenvector-only hybrids are symmetric counterfactual operators, not claimed realizable positive-conductance trees",
+  "seed": 17,
+  "slow_mode_best_match_overlaps": [
+    0.9913432293528394,
+    0.975338563440409,
+    0.9363813977804354
+  ],
+  "slow_subspace_principal_angles_degrees": [
+    4.058705040225379,
+    5.256712735760019,
+    16.416825216815106
+  ],
+  "state_slow_mode_overlap_matrix": [
+    [
+      0.9913432293528394,
+      0.028068607015060937,
+      0.07123026561079165
+    ],
+    [
+      0.04453883189155568,
+      0.975338563440409,
+      0.19860279110965529
+    ],
+    [
+      0.07559827975767011,
+      0.20702737671412885,
+      0.9363813977804354
+    ]
+  ],
+  "visible_mode_overlap_matrix": [
+    [
+      0.9893128264907342,
+      0.10236837505184591,
+      0.35161912158983333
+    ],
+    [
+      0.05304937955607472,
+      0.9914577933991984,
+      0.6919089503849947
+    ],
+    [
+      0.05990754889982379,
+      0.13947067395357463,
+      0.6165409401050449
+    ]
+  ]
+}

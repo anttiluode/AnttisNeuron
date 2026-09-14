@@ -1,463 +1,422 @@
-# A Spectral Two-Layer Neuron: Local Principal-Mode Learning, Branch Dynamics, and Nonlinear Subunit Readout
+# A Spectral Two-Layer Neuron: Local Statistical Modes, Physical Branch Dynamics, and Falsifiable Structural Adaptation
 
 Antti Luode  
 Working manuscript — 14 September 2026
 
 ## Abstract
 
-Nonlinear dendritic subunits can make the input-output function of a single pyramidal neuron resemble a small multilayer network. That architectural observation is established prior work. Here we study a narrower synthesis: what if branch receptive directions are acquired locally by an Oja-style principal-component rule, transformed by physical branch dynamics, and then combined through branch-local nonlinearities?
+Nonlinear dendritic subunits can make the input-output function of a single pyramidal neuron resemble a small multilayer network. That architectural observation is established prior work. Here we study a narrower synthesis: what happens when locally learned statistical directions interact with a physical branched operator that filters activity through time and can itself change slowly from local signals?
 
-We separate exact algebraic consequences from synthetic experiments. Purely linear branches collapse exactly to a single linear filter (maximum numerical error `1.78e-15`), whereas nonlinear branches are exactly equivalent to a one-hidden-layer network under the static abstraction. With a square branch nonlinearity the model reduces exactly to a quadratic classifier `x^T Q x` (maximum numerical error `4.26e-14`). On a variance-only classification task, raw linear and linear-branch controls obtain `49.4%` and `50.8%` held-out accuracy, while two locally Oja-learned mode detectors followed by square responses obtain `93.5%`; mean learned-filter alignment with the generating modes is `0.999900`.
+We separate exact algebra from synthetic experiments. Purely linear branches collapse exactly to one affine filter (maximum numerical error `1.78e-15`), whereas nonlinear branches are exactly a one-hidden-layer network under the static abstraction. With a square branch nonlinearity, the model is exactly a quadratic classifier `x^T Q x` (maximum error `4.26e-14`). On a variance-only task, raw linear and linear-branch controls obtain `49.4%` and `50.8%` held-out accuracy, while two locally Oja-learned mode detectors followed by square responses obtain `93.5%`.
 
-A differential-decay experiment verifies the narrow sense in which branch dynamics can increase relative mode purity. A constructive two-state recurrence then raises statistical-to-physical mode alignment from `0.722183` to `0.999010`, while a no-memory control remains at `0.722179`.
+A differential-decay experiment verifies the narrow sense in which physical dynamics can increase relative slow-mode purity. A constructive recurrent branch raises statistical-to-physical alignment from `0.722183` to `0.999010`. Gate 5 then replaces that hand-built system with an 11-node branched graph cable. Edge conductances adapt using only local squared voltage differences. In that construction, held-out Oja-to-physical alignment rises from `0.782185` to `0.900191`, while an exact-update-multiset shuffled-credit control obtains `0.759219`.
 
-The stronger experiment replaces that hand-built two-state system with an 11-node branched graph cable. Edge conductances adapt using only local squared voltage differences; the rule never receives physical eigenvectors, Oja weights, alignment scores, labels, or held-out metrics. Across five held-out covariance rotations, mean Oja-to-physical-mode alignment rises from `0.782185` for the frozen cable to `0.900191` after local structural adaptation. An exact-multiset shuffled-credit control, which receives the same per-phase update values assigned to the wrong edges, obtains `0.759219`; the update-multiset mismatch is exactly `0.0`. The adaptive minimum held-out alignment rises from `0.606365` to `0.839369`.
+Gate 5B asks what moved. Diagnostic hybrid operators show that adapted eigenvectors with frozen eigenvalues reproduce most of the gain (`0.892401`), whereas adapted eigenvalues with the frozen basis do not (`0.801087`). Thus the original Gate-5 effect is mainly associated with reorientation of the physical basis rather than a simple change of time constants.
 
-These results identify a compact synthetic computational object—local spectral learning coupled to a physical substrate whose own local activity can slowly reshape that substrate. They do not establish that biological dendrites use this rule or generally optimize eigenmode alignment.
+Gate 6 then freezes the Gate-5 rule and evaluates 24 deterministic branched worlds. Because individual eigenvectors are not stable objects inside degenerate eigenspaces, the final Gate-6 metric is the basis-invariant projection into the span of the three slowest visible non-uniform physical modes. Under that corrected metric, local adaptation beats frozen in `11/24` worlds; mean local-minus-frozen alignment is only `+0.000498`, and mean local-minus-shuffled is `-0.003074`. The unchanged rule therefore does not generalize as a universal organizing principle. Strong positive and negative worlds remain, converting the next question from “does it work?” to “what physical conditions make it work?”
+
+The study supports a compact synthetic mechanism—statistics can select directions, dynamics can reshape what is observable, and local structural change can sometimes reorient the operator toward those statistics. It does **not** establish that biological dendrites implement this rule or generally optimize eigenmode alignment.
 
 ## 1. Introduction
 
-The phrase "a single neuron is a two-layer neural network" is not a new claim. Poirazi, Brannon, and Mel showed in 2003 that the firing-rate response of a detailed CA1 pyramidal-cell model could be approximated by nonlinear dendritic subunits whose outputs were pooled at the soma. Broader work on dendritic computation has established that dendrites can perform both linear and nonlinear operations, and experiments in human layer 2/3 pyramidal neurons have demonstrated dendritic mechanisms capable of linearly nonseparable computation.
+The phrase “a single neuron is a two-layer neural network” is not new. Poirazi, Brannon, and Mel (2003) showed that a detailed pyramidal-cell model could be approximated by nonlinear dendritic subunits whose outputs are pooled at the soma. Dendritic computation has since been studied across morphology, synaptic placement, active conductances, and local nonlinear events. Human cortical neurons add another important context: recent detailed modeling suggests that dendritic morphology and nonlinear synaptic integration can substantially alter single-cell input-output complexity (Aizenbud et al., 2026).
 
-A separate classical line of work concerns local statistical learning. Oja's normalized Hebbian rule gives a simple neuron-like update whose weight vector converges, under standard assumptions, toward a leading covariance eigenvector. Oja learning therefore provides a local mechanism for constructing a direction through a multidimensional input cloud rather than selecting a single input wire.
+A second classical line of work concerns local statistical learning. Oja’s normalized Hebbian rule gives a simple update whose weight vector approaches a leading covariance eigenvector under standard conditions. A single Oja learner therefore does not “select one wire”; it extracts one dominant direction through a multidimensional local input space.
 
-The present study asks what happens when these ideas are connected through an explicit physical branch:
+A third ingredient is physical dynamics. A dendritic tree is not merely a collection of arbitrary learned vectors. Geometry, passive conductance, membrane properties, synaptic nonlinearities, and observation location constrain how activity propagates. In a linearized model those constraints define an operator with modes and time scales. The operator changes what statistics are visible downstream.
+
+This motivates a feedback picture:
 
 ```text
-local input statistics
+external statistics
         ↓
-Oja spectral direction
+local statistical selection
         ↓
-physical branch dynamics
+physical branched dynamics
         ↓
-branch-local nonlinearity
+locally observed activity
         ↓
-somatic pooled readout
+slow structural change
+        ↺
 ```
 
-The point is not biological completeness. It is to expose exactly which parts of the intuition are algebraic, which are prior art, and which remain scientific hypotheses.
+The attractive intuition is that a physical branch could come to “fit” statistically important activity. That statement is easy to overstate. It could mean only that one decay rate became slower; it could mean that the physical eigenbasis actually changed; or it could be a numerical artifact caused by arbitrary eigenvector orientation in a nearly degenerate eigenspace. AnttisNeuron therefore proceeds through gates designed to separate these possibilities.
 
-The central negative control is simple. If every branch is linear, then multiple branches do not by themselves create a deeper computation: they collapse into one effective linear filter. Computational depth enters only when a nonlinearity acts before branch outputs are pooled.
+The central discipline of the repository is that a failed scientific gate is not a failed CI job. Software tests enforce algebra, determinism, stability, matched controls, and reproducibility. They do not require the preferred biological story to be true.
 
-The next question is more unusual. Physical dynamics do not merely transform a representation after it is learned. They also change the time series, covariance, and local activity from which future learning is computed. If the physical structure itself changes slowly in response to local activity, statistical learning and physical dynamics can form a feedback loop even without backpropagating an alignment objective through the substrate.
+## 2. Biological and mathematical anchors
 
-AnttisNeuron tests progressively stronger versions of that idea. Gate 4 is a deliberately constructive existence proof. Gate 5 removes the explicit spectral construction and asks whether an alignment-blind local structural rule can produce a useful statistical/physical alignment effect on a branched operator and generalize to held-out input statistics.
+### 2.1 Oja learning
 
-## 2. Related work
+Oja (1982) introduced a normalized Hebbian rule that behaves as a principal-component analyzer. In the single-unit setting used here, the relevant result is limited: the weight vector approaches one leading covariance direction. Multiple identical Oja units are not assumed to discover a full PCA basis without competition or decorrelation.
 
-### 2.1 Oja learning and principal directions
+### 2.2 Dendritic nonlinear subunits
 
-Oja (1982) introduced a simplified neuron model that behaves as a principal-component analyzer. In the one-unit setting used here, the relevant statement is limited: the learned vector approaches a leading covariance eigenvector. Multiple identical Oja units observing the same distribution are not assumed to discover distinct principal components without competition or decorrelation.
+Poirazi et al. (2003) mapped a detailed CA1 pyramidal neuron to a two-layer abstraction in which local dendritic nonlinearities provide hidden subunits and the soma pools them. London and Häusser (2005) reviewed a broad range of dendritic computations, and Gidon et al. (2020) reported nonlinear dendritic events in human layer 2/3 cortical neurons capable of supporting linearly nonseparable computations.
 
-### 2.2 Nonlinear dendritic subunits
+Aizenbud et al. (2026) provide a useful contemporary constraint. Their Functional Complexity Index compares how difficult detailed biophysical neuron models are for a fixed deep network to approximate. In their model set, human cortical pyramidal neurons are more functionally complex than rat counterparts. Morphology is a major contributor: total dendritic area is the strongest single morphological correlate they report, while combining area with longest bifurcation-branch length explains substantially more variance than branch count alone. They also find that stronger and steeper NMDA-mediated nonlinear integration further increases model complexity.
 
-Poirazi, Brannon, and Mel (2003) mapped a detailed CA1 pyramidal-cell model to a two-layer abstraction: dendritic subunits perform local nonlinear transformations and the soma pools their outputs. London and Häusser (2005) reviewed mechanisms by which dendrites contribute to neuronal computation. Gidon et al. (2020) reported dendritic calcium action potentials in human layer 2/3 cortical neurons and showed that the measured nonlinear behavior could support linearly nonseparable computation.
+This matters here because it warns against a simplistic “more branches = more computation” story. Geometry, distributed extent, electrical separation, and nonlinear integration interact.
 
-Aizenbud et al. (2026) introduced a Functional Complexity Index and reported that modeled human cortical pyramidal neurons were more difficult for deep networks to approximate than corresponding rat neurons, with dendritic membrane area, branching pattern, and NMDA receptor density/nonlinearity contributing strongly to functional complexity. These results motivate studying morphology/dynamics and branch nonlinearity as computational components, but they do not imply the spectral-learning mechanism studied here.
+### 2.3 Dendritic load and the axon initial segment
 
-### 2.3 Axon initial segment plasticity
+The axon initial segment (AIS) is the specialized proximal axonal compartment at which action potentials are normally initiated. Leterrier (2018) reviews how AIS channel composition and position shape excitability and how AIS structure can adapt under developmental and physiological conditions. The effect of AIS geometry on excitability is not independent of the rest of the neuron; dendritic morphology and electrical load matter to the whole-cell boundary problem.
 
-The axon initial segment (AIS) controls action-potential initiation and exhibits structural and functional plasticity. Leterrier (2018) reviewed the dependence of neuronal excitability on AIS composition and position. AnttisNeuron does not model AIS plasticity. The soma/AIS remains a pooled scalar readout; coupling branch load to an adaptive output boundary is left for a later gate.
+Aizenbud et al. also make the load connection explicit in their modeling methods: somatic and axonal active conductance densities are normalized using conductance ratios that account for the electrical load imposed by the dendritic tree. That is a modeling choice rather than evidence for a specific biological AIS learning rule, but it reinforces an important physical point: dendrite and axon cannot always be treated as independent computational modules.
+
+AnttisNeuron does **not** yet implement AIS plasticity. These biological results motivate a later, separately controlled output-boundary experiment rather than being used as retrospective validation of Gates 0–6.
 
 ## 3. Model
 
-### 3.1 Local spectral learning
+### 3.1 Local statistical direction
 
-Branch `j` observes a local vector
+A local input vector is
 
 ```math
-x_j(t) \in \mathbb{R}^{n_j}.
+x(t)\in\mathbb{R}^{n}.
 ```
 
-Its Oja unit computes
+An Oja unit computes
 
 ```math
-y_j(t)=w_j^T x_j(t)
+y(t)=w^T x(t)
 ```
 
 and updates
 
 ```math
-\Delta w_j = \eta y_j\left(x_j-y_j w_j\right).
+\Delta w=\eta y\left(x-yw\right).
 ```
 
-For stationary zero-mean data under the usual conditions, the expected fixed point is a covariance eigenvector. We use sign-invariant cosine alignment because eigenvectors are defined only up to sign.
+Alignment metrics are sign-invariant because eigenvectors are defined only up to sign.
 
-### 3.2 Generic physical branch
+### 3.2 Generic dynamic branch
 
-The minimal dynamic branch is
+A minimal branch state evolves as
 
 ```math
-d_j(t+1)=A_j d_j(t)+b_j y_j(t),
+d(t+1)=A d(t)+b y(t),
 ```
 
-with measured scalar response
+with local response
 
 ```math
-r_j(t)=c_j^T d_j(t).
+r(t)=c^T d(t)
 ```
 
-A branch-local nonlinearity gives
+and branch nonlinearity
 
 ```math
-q_j(t)=\psi_j(r_j(t)),
+q(t)=\psi(r(t)).
 ```
 
-and the soma-like readout is
+A soma-like readout pools branch outputs,
 
 ```math
-v(t)=\sum_j a_j q_j(t)+b.
+v(t)=\sum_j a_j q_j(t)+b_0.
 ```
 
-For classification experiments, the final readout is fitted only after branch features have been formed. This separates the representation exposed by the branches from the simple question of whether a linear output can use it.
+### 3.3 Static branch abstraction
 
-### 3.3 Static effective-filter abstraction
-
-For the exact algebraic tests we replace temporal branch history by static effective filters `m_j` and write
+For exact identities we use effective branch filters `m_j`:
 
 ```math
-v(x)=\sum_j a_j\psi(m_j^T x)+b.
+v(x)=\sum_j a_j\psi(m_j^Tx)+b_0.
 ```
 
-This abstraction is sufficient to prove the key controls.
+If `psi(z)=z`, then
+
+```math
+v(x)=\left(\sum_j a_jm_j\right)^Tx+b_0,
+```
+
+so all static linear branches collapse to one affine filter.
+
+If `psi(z)=z^2`,
+
+```math
+v-b_0=\sum_j a_j(m_j^Tx)^2
+=x^T\left(\sum_j a_jm_jm_j^T\right)x.
+```
+
+Thus the static model is exactly a quadratic form.
 
 ### 3.4 Branched graph cable
 
-Gate 5 uses a fixed 11-node tree with ten positive edge conductances. For symmetric weighted adjacency `W(g)`, the graph Laplacian is
+Gate 5 uses a tree with eleven nodes and ten positive edge conductances. Let `W(g)` be the weighted symmetric adjacency matrix and
 
 ```math
-L(g)=D(g)-W(g).
+L(g)=D(g)-W(g)
 ```
 
-The discrete leaky diffusion operator is
+its graph Laplacian. The discrete stable leaky-diffusion operator is
 
 ```math
-A(g)=I-dt\,[\ell I+\kappa L(g)],
+A(g)=I-dt\,[\ell I+\kappa L(g)].
 ```
 
-and state evolves as
+State evolves as
 
 ```math
 d_{t+1}=A(g)d_t+Bx_t.
 ```
 
-The learner does not see the full state. A fixed sensor matrix selects four node voltages,
+Only four node voltages are exposed to the learner:
 
 ```math
-z_t=S d_t \in \mathbb R^4,
+z_t=S d_t\in\mathbb{R}^4.
 ```
 
-and Oja learning operates only on `z_t`.
+The full physical state and physical eigenvectors remain hidden from Oja learning.
 
-The physical modes used for evaluation are eigenvectors of the symmetric operator `A(g)` projected into the same four-dimensional sensor space. The nearly uniform global leak mode is excluded from the main alignment score. The score uses the three slowest remaining visible modes so that trivial global smoothing cannot count as successful route formation.
+### 3.5 Local structural rule
 
-### 3.5 Alignment-blind local structural adaptation
-
-For edge `e=(i,j)`, define local voltage-difference energy
+For edge `e=(i,j)`, define
 
 ```math
-q_e = \mathbb E[(d_i-d_j)^2].
+q_e=\mathbb E[(d_i-d_j)^2].
 ```
 
-A fixed homeostatic target `q_*` is measured once from the initial frozen structure. Conductance updates as
+A target `q_*` is measured once from the initial frozen structure. Conductance changes by
 
 ```math
-g_e \leftarrow g_e \exp\left[\eta_g\left(\frac{q_e}{q_*}-1\right)\right],
+g_e\leftarrow g_e\exp\left[\eta_g\left(\frac{q_e}{q_*}-1\right)\right],
 ```
 
-followed by clipping and mean-conductance renormalization.
+followed by clipping and exact mean-conductance normalization.
 
-The rule is deliberately blind to the scientific evaluation target. Its implementation accepts neither physical eigenvectors nor Oja weights, alignment values, class labels, or held-out metrics. Mean-conductance normalization also prevents the trivial solution of increasing every conductance together.
+The adaptor receives no eigenvectors, Oja weights, labels, alignment scores, or held-out metrics.
 
-## 4. Exact results
+## 4. Gates 0–4: algebra and existence tests
 
-### 4.1 Linear branches collapse
+### Gate 0 — Oja sanity check
 
-If `psi(z)=z`, then
+A five-dimensional Gaussian with known covariance eigenvectors is sampled. Oja recovers the leading principal direction with cosine alignment `0.9955947725`.
 
-```math
-v(x)=\sum_j a_j m_j^T x+b
-     =\left(\sum_j a_j m_j\right)^T x+b.
+### Gate 1 — exact algebra
+
+The implementation verifies:
+
+- linear branch collapse, maximum error `1.7763568394e-15`;
+- explicit one-hidden-layer equivalence, error `0.0`;
+- square-branch quadratic-form identity, error `4.2632564146e-14`.
+
+### Gate 2 — variance-only classification
+
+Two centered classes differ only in mode energy. Raw linear accuracy is `0.4940`; identity-branch accuracy is `0.50775`. Two Oja-learned local filters followed by squaring expose the second-order difference and achieve `0.9350` held-out accuracy. Mean learned-filter alignment with the generating modes is `0.999900`.
+
+The point is not that Oja solves arbitrary nonlinear tasks. It is the specific pipeline:
+
+```text
+local spectral direction → local nonlinear feature → simple pooled decision
 ```
 
-Thus a static multi-branch linear neuron is only one affine linear unit. The implementation verifies the identity with maximum absolute error `1.7763568394002505e-15`.
+### Gate 3 — differential decay
 
-### 4.2 Nonlinear branches are a shallow network
+Two modes decay at rates `0.03` and `0.21`. Starting with equal amplitudes, the slow/fast relative amplitude ratio reaches `36.5982344437` at `t=20`, matching the analytic expression to `7.11e-15`.
 
-For arbitrary pointwise `psi`, define
+“Purification” here means **relative** dominance of the slow component. No passive system is claimed to amplify all absolute energy.
 
-```math
-h_j(x)=\psi(m_j^Tx).
-```
+### Gate 4 — recurrent existence proof
 
-Then
+A deliberately constructed two-state system has eigenvalues `0.97` and `0.65`. External statistics begin between its physical modes. Recurrent observation reshapes the covariance seen by Oja. Alignment changes from `0.7221832493` to `0.9990103496`; the no-memory control remains `0.7221787537`.
 
-```math
-v(x)=a^T h(x)+b,
-```
+Gate 4 proves only that such coupling can exist.
 
-which is exactly the forward equation of a one-hidden-layer network whose hidden units are branch subunits. The implementation obtains zero numerical difference from an explicit shallow-network expression.
+## 5. Gate 5: alignment-blind structural adaptation
 
-### 4.3 Square branches are a quadratic form
+Gate 5 removes the hand-built two-state target. The 11-node tree receives four-dimensional inputs at four distal ports and exposes only four sensor voltages. Four covariance environments drive adaptation; five different covariance rotations are held out for evaluation.
 
-For
+Four conditions share the same input tapes and matched Oja initialization:
 
-```math
-\psi(z)=z^2,
-```
+1. **Frozen:** all conductances remain fixed.
+2. **Local:** each edge receives its own local voltage-difference signal.
+3. **Shuffled credit:** every adaptation phase receives the exact multiset of local update values, randomly reassigned to the wrong edges.
+4. **Uniform:** relative structure remains exactly frozen.
 
-we have
+The shuffled control is important. It asks whether the local *placement* of credit matters, not merely whether adaptation introduces a distribution of conductance changes. The maximum update-multiset mismatch in the committed receipt is exactly `0.0`.
 
-```math
-v-b=\sum_j a_j(m_j^Tx)^2
-   =x^T\left(\sum_j a_jm_jm_j^T\right)x.
-```
+Held-out mean alignment is:
 
-With
-
-```math
-Q=\sum_j a_jm_jm_j^T,
-```
-
-this becomes
-
-```math
-v=x^TQx+b.
-```
-
-The direct branch computation and quadratic form agree to maximum absolute error `4.263256414560601e-14`.
-
-## 5. Experiments
-
-All committed results use seed `17`. JSON receipts are written by the experiment scripts and checked into `results/`.
-
-### 5.1 Gate 0 — Oja recovery
-
-A five-dimensional Gaussian distribution is generated with known covariance spectrum `[9.0, 3.0, 1.5, 0.7, 0.3]` in a random orthonormal basis. A single Oja unit is trained on 14,000 samples for three epochs. Performance is sign-invariant cosine alignment with the analytic leading covariance eigenvector.
-
-### 5.2 Gate 1 — algebraic identities
-
-Random inputs, branch filters, and output weights test linear collapse, explicit shallow-network equivalence, and the square/quadratic-form identity. These are implementation checks of algebraic statements rather than empirical hypotheses.
-
-### 5.3 Gate 2 — variance-only classification
-
-Two orthonormal task modes are generated in six dimensions. Both classes remain centered near zero. Class 0 has high variance along mode 0 and low variance along mode 1; class 1 reverses those variances. Two branches receive different local streams, each dominated by one task mode, and learn their directions with Oja's rule without class labels.
-
-A ridge readout is fitted on raw input, linear Oja branch coordinates, and squared Oja branch coordinates. The task is intentionally constructed so first-order sign information is unhelpful while second-order mode energy is diagnostic.
-
-### 5.4 Gate 3 — differential decay
-
-Two physical modes decay with rates `mu_slow=0.03` and `mu_fast=0.21`. Starting from equal amplitudes, the analytic relative amplitude is
-
-```math
-R(t)=\exp[(\mu_{fast}-\mu_{slow})t].
-```
-
-The same ratio is measured in a diagonal discrete-time system. This tests only the narrow claim that slower modes become purer *relative* to faster modes.
-
-### 5.5 Gate 4 — constructive statistical/physical alignment
-
-A two-state stable physical system has eigenvalues `0.97` and `0.65`. External Gaussian statistics begin halfway between its two input-visible physical modes. The recurrent state evolves as
-
-```math
-d_{t+1}=Ad_t+Bx_t,
-```
-
-and is observed back in input coordinates. The slow mode accumulates more variance; Oja follows the covariance of that recurrent observation. A no-memory control sets `A=0`.
-
-This experiment asks whether the causal mechanism can exist. It does not ask whether alignment appears spontaneously under local structural learning.
-
-### 5.6 Gate 5 — adaptive branched cable with matched controls
-
-Gate 5 replaces the two-state construction with the 11-node graph cable of Section 3.4. External input enters four distal ports. Four node voltages are observed. Four adaptation covariance environments use rotations of `12°`, `31°`, `53°`, and `74°`; five held-out evaluation environments use `22°`, `42°`, `63°`, `83°`, and `103°`.
-
-All conditions receive common random input tapes. Oja initialization is also shared per evaluation tape so differences between conditions are not random-initialization effects.
-
-Four structural conditions are evaluated:
-
-1. **Frozen:** all ten conductances remain one.
-2. **Local adaptive:** each edge updates from its own voltage-difference energy.
-3. **Shuffled credit:** on every adaptation phase, this control receives the exact multiset of update values generated by the local-adaptive condition, but the values are randomly permuted across edges before application.
-4. **Uniform:** every edge receives the same phase-mean update before mean-conductance normalization, leaving relative conductances unchanged.
-
-The shuffled condition is deliberately stronger than merely running the same learning law on a different trajectory. Its per-phase update multiset is exactly matched to the local condition; the committed receipt reports maximum mismatch `0.0`. Therefore the adaptive-versus-shuffled comparison isolates *where* local credit is assigned, not update magnitude or distribution.
-
-No software test requires Gate 5 alignment to increase. CI checks determinism, finiteness, graph/operator invariants, conductance bounds and normalization, common input tapes, the alignment-blind adaptor interface, and the exact shuffled-update multiset.
-
-## 6. Results
-
-| Measurement | Result |
+| condition | alignment |
 |---|---:|
-| Gate 0 Oja↔true-PC alignment | `0.9955947725` |
-| Gate 1 linear-collapse max error | `1.7763568394e-15` |
-| Gate 1 two-layer equivalence max error | `0.0` |
-| Gate 1 quadratic-form max error | `4.2632564146e-14` |
-| Gate 2 filter 0 alignment | `0.9999145444` |
-| Gate 2 filter 1 alignment | `0.9998860968` |
-| Gate 2 raw linear accuracy | `0.4940` |
-| Gate 2 identity-branch accuracy | `0.50775` |
-| Gate 2 square-branch accuracy | `0.9350` |
-| Gate 3 slow/fast ratio at `t=20` | `36.5982344437` |
-| Gate 3 analytic/sim max error | `7.1054273576e-15` |
-| Gate 4 fixed alignment | `0.7221832493` |
-| Gate 4 no-memory alignment | `0.7221787537` |
-| Gate 4 recurrent alignment | `0.9990103496` |
-| Gate 4 alignment change | `+0.2768271003` |
-| Gate 5 frozen held-out mean alignment | `0.7821845260` |
-| Gate 5 local-adaptive held-out mean alignment | `0.9001914311` |
-| Gate 5 shuffled-credit held-out mean alignment | `0.7592192537` |
-| Gate 5 uniform held-out mean alignment | `0.7821845260` |
-| Gate 5 adaptive − frozen | `+0.1180069051` |
-| Gate 5 adaptive − shuffled | `+0.1409721775` |
-| Gate 5 frozen held-out minimum | `0.6063645741` |
-| Gate 5 adaptive held-out minimum | `0.8393687765` |
-| Gate 5 local energy/conductance-change correlation | `0.9762404274` |
-| Gate 5 frozen slow non-uniform eigenvalue | `0.9859826076` |
-| Gate 5 adaptive slow non-uniform eigenvalue | `0.9881552640` |
-| Gate 5 shuffled update-multiset max error | `0.0` |
+| frozen | `0.7821845260` |
+| shuffled | `0.7592192537` |
+| local | `0.9001914311` |
 
-### 6.1 Spectral nonlinear features solve the intended second-order task
+The local adaptive minimum across held-out environments is `0.8393687765`, versus `0.6063645741` frozen.
 
-The raw linear baseline (`49.4%`) and identity-branch model (`50.775%`) remain at chance, whereas the square-branch model reaches `93.5%`. The two Oja filters align almost perfectly with the locally dominant modes. Thus local unsupervised learning recovers useful spectral coordinates, but those coordinates become class-informative only after the nonlinear energy transform.
+This is the strongest positive construction in the repository: an alignment-blind local structural rule improves held-out statistical-to-physical alignment in one branched operator without receiving the global alignment objective.
 
-### 6.2 Differential decay gives a precise weak form of mode purification
+It remains a synthetic graph-diffusion result.
 
-The slow/fast ratio grows to `36.60` at `t=20`, and simulation matches the analytic ratio to floating-point precision. This validates only relative differential decay. A passive stable system does not choose an arbitrary desired covariance mode.
+## 6. Gate 5B: spectral autopsy
 
-### 6.3 Physical recurrence can write its spectrum into local statistics
+The phrase “the dendrite grew to fit the mode” is stronger than Gate 5 alone justifies. A conductance change can alter eigenvalues while leaving the physical basis almost unchanged, or it can rotate the basis itself. Gate 5B separates these effects.
 
-Gate 4 begins at alignment `0.722183`; the no-memory control is `0.722179`; recurrence raises alignment to `0.999010`. The slow physical state accumulates variance, causing the covariance seen by Oja to become dominated by the slow physical eigenmode.
-
-Gate 4 therefore demonstrates a causal arrow:
-
-```text
-physical dynamics -> changed observed covariance -> changed local spectral learning.
-```
-
-Because the unequal decay rates are explicitly constructed, Gate 4 remains an existence proof.
-
-### 6.4 Alignment-blind local structure improves held-out coupling
-
-Gate 5 asks the harder question. The local structural rule is never shown an eigenvector or alignment score. Nevertheless, after four adaptation environments its mean held-out alignment is `0.900191`, compared with `0.782185` for the frozen graph, a gain of `+0.118007`.
-
-The result is not driven only by one favorable environment. Per-held-out alignments for the local-adaptive cable are
-
-```text
-0.873230, 0.884271, 0.922112, 0.981976, 0.839369,
-```
-
-while the frozen cable gives
-
-```text
-0.606365, 0.608281, 0.982430, 0.972830, 0.741017.
-```
-
-The mean therefore increases while the worst held-out case rises from `0.606365` to `0.839369`. Two environments already aligned strongly under the frozen structure and remain strong; the largest changes occur where the original structure was poorly matched.
-
-The exact-multiset shuffled-credit control obtains mean alignment `0.759219`, so correct local credit beats the matched wrong-edge assignment by `+0.140972`. This matters because the shuffled condition receives exactly the same update-value multiset on every phase. What differs is which physical edge receives which change.
-
-The uniform control returns `0.782185`, numerically reproducing the frozen condition as expected after mean-conductance normalization. This verifies that a global scalar conductance change is not the source of the effect.
-
-The final adaptive conductance coefficient of variation is `0.509652`, and adaptation-ensemble local edge energy correlates `0.976240` with conductance change. The slowest non-uniform physical eigenvalue moves from `0.985983` to `0.988155`. Together these measurements show a concrete sequence:
-
-```text
-local edge activity
-        ↓
-nonuniform structural change
-        ↓
-changed physical spectrum / state statistics
-        ↓
-changed Oja direction under bounded observation.
-```
-
-This is stronger than Gate 4 because no global spectral target constructs the desired physical mode. It is still a synthetic result, not a biological mechanism claim.
-
-## 7. Discussion
-
-AnttisNeuron now separates four conceptual levels that are easy to mix together.
-
-First, Oja learning and fixed branch filtering are linear with respect to a fixed state. They can supply selectivity and temporal memory, but a static multi-branch neuron without local nonlinearity collapses to one linear map.
-
-Second, branch-local nonlinearity before pooling creates genuine hidden computational subunits in the ordinary shallow-network sense. The square special case makes the computation interpretable as weighted energy in learned directions.
-
-Third, physical dynamics can define part of the learning problem. Gate 4 shows that recurrence changes the covariance available to a local learner even when the learner itself has no model of the physical system.
-
-Fourth, the physical structure can itself change through a local rule. Gate 5 closes one additional arrow: edge-local state differences slowly alter conductances, which alter the graph spectrum and future bounded observations. The Oja learner then adapts to statistics produced by this changed substrate.
-
-The important point is not that the local rule "knows" about eigenmodes. It does not. The update is defined entirely by local voltage-difference energy plus a scalar homeostatic target. The positive alignment result is therefore an emergent consequence of this particular synthetic system rather than direct optimization of the reported metric.
-
-The shuffled-credit control strengthens that interpretation. Matching the update-value multiset while destroying edge-local assignment removes the gain. In this experiment, *where* the same structural changes are applied matters more than their mere magnitude distribution.
-
-This begins to resemble the coupled fixed-point picture that motivated the project. A full version would contain at least three mutually interacting variables:
+Let
 
 ```math
-C(A,\theta)w=\lambda w,
+A_f=Q_f\Lambda_fQ_f^T
 ```
 
-with slow structural dynamics for `A` and homeostatic/output dynamics for `theta`. Gate 5 does not solve that full system, but it demonstrates two-way coupling between local activity statistics and a physical operator without using a global alignment objective.
+be the frozen operator and
 
-The novelty claim should therefore remain narrow. Two-layer dendritic computation is established. Oja/PCA learning is established. Weighted graph diffusion and local homeostasis are established mathematical ingredients. What is new here, if useful, is the explicitly falsifiable synthesis and control structure: locally learned statistical modes, a physical operator that changes observed statistics, and an alignment-blind local structural rule whose edge-specific credit can be tested against exact matched controls.
+```math
+A_a=Q_a\Lambda_aQ_a^T
+```
 
-## 8. Limitations and falsification criteria
+be the adapted operator. Two diagnostic hybrids are constructed:
 
-### 8.1 The branched cable is still an abstraction
+```math
+A_\lambda=Q_f\Lambda_aQ_f^T
+```
 
-Gate 5 improves on the generic `LinearBranch` by introducing topology, weighted edges, bounded sensors, and a graph Laplacian. It is nevertheless a discrete linear diffusion system. It omits membrane capacitance units, compartment geometry, active ion channels, synaptic conductance kinetics, NMDA voltage dependence, stochastic channels, and realistic dendritic plasticity.
+and
 
-Calling it a "cable" describes the mathematical analogy, not a validated biophysical neuron.
+```math
+A_Q=Q_a\Lambda_fQ_a^T.
+```
 
-### 8.2 The local conductance rule is a hypothesis generator
+These are symmetric diagnostic counterfactuals, not claimed to correspond to realizable positive-conductance trees.
 
-The edge rule was chosen because it is local, simple, homeostatic, and alignment-blind. The present result does not establish that biological dendrites update axial or membrane properties according to squared voltage differences, nor that such a rule is optimal.
+Held-out mean alignment is:
 
-A stronger study should test a family of local rules predeclared before outcome inspection and identify which effects survive rule changes.
+| operator | alignment |
+|---|---:|
+| frozen | `0.7821845260` |
+| adapted eigenvalues, frozen basis | `0.8010872578` |
+| adapted basis, frozen eigenvalues | `0.8924009609` |
+| fully adapted | `0.9001914311` |
 
-### 8.3 Oja learning remains local PCA
+The slow three-dimensional state subspaces differ by principal angles approximately `4.06°`, `5.26°`, and `16.42°`.
 
-A single Oja unit is biased toward one dominant covariance direction. Multiple branches observing the same distribution require competition, deflation, Sanger's rule, or another mechanism to reliably span multiple PCs.
+A four-way frame comparison is also informative:
 
-### 8.4 Gate 2 is deliberately constructed
+| statistical direction | physical modes | mean alignment |
+|---|---|---:|
+| frozen Oja | frozen | `0.782185` |
+| frozen Oja | adapted | `0.903345` |
+| adapted Oja | frozen | `0.748890` |
+| adapted Oja | adapted | `0.900191` |
 
-The nonlinear benchmark is designed so squared mode energy is the correct representation. Its purpose is explanatory, not to establish broad task superiority.
+In this construction the physical substrate moved toward the statistical frame much more strongly than the learner simply moved toward an unchanged physical frame. That makes “basis reorientation” a fair description of Gate 5. It still does not imply biological dendritic morphology performs the same operation.
 
-### 8.5 Gate 4 is an existence proof
+## 7. Gate 6: 24-world generalization test
 
-Gate 4 explicitly builds unequal physical decay rates and then observes the recurrent state. Its positive alignment is therefore evidence that the causal path can exist, not that it self-organizes.
+### 7.1 Predeclared variation
 
-### 8.6 Gate 5 is stronger but not biological validation
+Gate 6 freezes the Gate-5 rule and hyperparameters and generates 24 deterministic worlds varying:
 
-Gate 5 predeclares an alignment-blind local rule and evaluates held-out covariance rotations with matched controls. The positive result is therefore not merely the Gate 4 construction repeated. However, one topology, one sensor placement, one parameter set, one adaptation rule, and one seed do not establish a general phenomenon.
+- tree topology;
+- input-port placement;
+- sensor placement;
+- covariance rotations and spectra;
+- random seed.
 
-The next falsification should sweep seeds, topologies, port/sensor arrangements, conductance bounds, and local-rule families without retuning each case. A useful phenomenon should survive a meaningful fraction of these changes and should continue to beat exact-multiset shuffled credit.
+The same frozen/local/exact-multiset-shuffled/uniform controls are retained. Failures are recorded rather than retuned.
 
-### 8.7 No AIS/output adaptation yet
+### 7.2 Why individual eigenvectors were the wrong metric
 
-The current output readout does not implement activity-dependent AIS location, length, conductance, or dendritic-load matching. The proposed statistical-mode ↔ physical-mode ↔ output-boundary fixed point therefore remains incomplete.
+An early Gate-6 evaluation matched Oja directions to individual slow visible eigenvectors. That metric is numerically unstable when two or more eigenvalues are equal or nearly equal: an eigensolver is free to return any orthonormal basis spanning the same physical eigenspace. A microscopic perturbation can therefore rotate the reported eigenvectors while the physical subspace is unchanged.
 
-### 8.8 Scientific nulls remain valid
+The final Gate-6 metric uses the **span** of the three slowest visible non-uniform modes. Their sensor-space projections are orthonormalized with an SVD, and the normalized score for an Oja vector `w` is
 
-CI never asserts that Gate 4 or Gate 5 alignment must increase. It asserts determinism, finiteness, structural invariants, matched inputs/updates, and valid numerical bounds. A negative future receipt is allowed to remain negative.
+```math
+s(w,U)=\frac{\|U^Tw\|_2}{\|w\|_2},
+```
 
-This separation between engineering gates and scientific outcomes is intentional protection against tuning the code until a preferred story appears.
+where columns of `U` form an orthonormal basis for the selected visible physical subspace. The score is invariant to sign flips, mode permutations, and arbitrary rotations within that span. A regression test explicitly verifies this invariance.
+
+Because the observation space is four-dimensional while the scored physical span is three-dimensional, absolute projection scores are expected to be high. Scientific interpretation therefore focuses on **within-world condition deltas**, not the absolute mean score.
+
+### 7.3 Corrected result
+
+The frozen 24-world receipt reports:
+
+| measurement | result |
+|---|---:|
+| frozen mean alignment | `0.9289695876` |
+| local mean alignment | `0.9294679130` |
+| shuffled mean alignment | `0.9325420371` |
+| local beats frozen | `11 / 24` |
+| local beats shuffled | `9 / 24` |
+| mean local − frozen | `+0.0004983254` |
+| median local − frozen | `−0.0001175012` |
+| first quartile local − frozen | `−0.0099764339` |
+| minimum local − frozen | `−0.3012406816` |
+| mean local − shuffled | `−0.0030741242` |
+| median local − shuffled | `−0.0015638860` |
+| minimum local − shuffled | `−0.3030618501` |
+
+The aggregate effect is therefore approximately null versus frozen and slightly negative versus shuffled. The unchanged Gate-5 rule does **not** generalize as a universal organizing rule across these worlds.
+
+The distribution is highly heterogeneous. For example, one world improves by roughly `+0.344` versus frozen, while another degrades by roughly `−0.301`. This heterogeneity is scientifically more interesting than forcing the mean positive. It provides a compact dataset for asking which structural and electrical conditions permit or prevent useful operator reorientation.
+
+## 8. What the gates establish
+
+The sequence now supports the following bounded claims:
+
+1. A locally learned statistical direction plus branch-local nonlinearity can expose second-order information unavailable to a linear readout in the constructed task.
+2. Physical recurrence can reshape the covariance seen by a local learner.
+3. A purely local structural rule can, in at least one branched system, improve held-out statistical-to-physical alignment without being given that objective.
+4. In the Gate-5 construction, most of that improvement is associated with physical-basis reorientation rather than eigenvalue change alone.
+5. The same local rule does **not** robustly improve an arbitrary family of branched worlds.
+6. Near degenerate spectra, the physically meaningful comparison is an eigenspace/subspace comparison rather than arbitrary individual eigenvector labels.
+
+The sequence does **not** establish:
+
+- that biological dendrites use Oja’s rule;
+- that biological structural plasticity follows the Gate-5 conductance update;
+- that real dendrites explicitly optimize eigenmodes;
+- that the synthetic graph cable captures NMDA spikes or detailed compartmental biophysics;
+- that Gate-5 adaptation is universally beneficial;
+- that AIS plasticity implements a load-matching algorithm.
 
 ## 9. Next experiments
 
-Gate 5 completes much of the previously proposed "stronger future test," so the next sequence should move from one successful construction toward generality and closure:
+### 9.1 World anatomy: explain the Gate-6 heterogeneity
 
-1. **Gate 6 — generalization matrix:** run many fixed seeds, several tree topologies, multiple port/sensor placements, and covariance families with no per-case retuning. Report the distribution of adaptive−frozen and adaptive−shuffled deltas.
-2. **Rule ablation:** compare voltage-difference homeostasis with alternative local rules matched for update scale to determine whether the effect is specific or generic.
-3. **Multi-mode learning:** replace the single Oja direction with Sanger-style local subspace learning and ask whether physical structure supports several persistent statistical modes simultaneously.
-4. **Active branch dynamics:** introduce a minimal local nonlinear conductance only after the passive graph controls are understood, then test whether the structural effect survives.
-5. **Output-boundary adaptation:** add a slow homeostatic soma/AIS-like variable and test the three-way fixed point between statistical mode, physical mode, and output boundary.
-6. **Biophysical transfer:** only after the abstract controls survive, port the strongest gate to a compartmental cable/NEURON-style model and ask which conclusions remain.
+The immediate next step should not change the learner. It should characterize the worlds already produced. Candidate explanatory variables include graph depth, branching geometry, port-to-sensor distances, effective electrical distances, observable slow-mode conditioning, spectral gaps, baseline ceiling, local energy heterogeneity, and conductance-change heterogeneity.
 
-The decisive next result is no longer simply "alignment rose once." It is whether the alignment-blind local mechanism survives perturbation of topology, statistics, observation, and random seed while continuing to outperform exact matched wrong-edge credit.
+This analysis is necessarily **post hoc** because the Gate-6 outcomes have already been observed. It should therefore be used to generate a small number of candidate mechanisms, followed by a fresh confirmatory world suite.
+
+The Aizenbud et al. morphology result suggests a useful caution: branch count alone is unlikely to be the right explanatory variable. Extent, area/load proxies, and how branching is distributed may matter more.
+
+### 9.2 Output-boundary/AIS surrogate
+
+Only after the dendritic-world analysis should the model add an AIS-like boundary. A minimal future experiment would introduce a slowly adapting output excitability or threshold variable driven by a dendritic-load signal and compare it against a fixed-boundary control across a fresh morphology suite.
+
+This would test a narrow physical question inspired by real AIS plasticity and dendritic-load coupling: can slow adaptation at the output boundary stabilize useful input-output behavior as the upstream branched load changes? It should not be called a detailed AIS model.
+
+### 9.3 More realistic dendritic nonlinearities
+
+The current graph cable is linear between structural updates. The repository’s earlier static `NMDA` activation is only a toy supralinear function. A later biophysical gate should distinguish passive cable effects from voltage-dependent local nonlinearities rather than mixing them prematurely.
+
+## 10. Reproducibility and scientific policy
+
+All random generators are seeded. Gate 6 worlds are deterministic. Common tapes are used across controls. The shuffled structural condition receives the exact local update-value multiset on every phase. Operators are checked for finiteness and stability.
+
+CI treats engineering failures and scientific outcomes differently:
+
+- nondeterminism, invalid operators, broken controls, mismatched tapes, and algebraic failures are **red**;
+- a negative scientific delta is still a valid, recorded scientific result.
+
+This distinction is why Gate 6 is useful: the code passed while the broad hypothesis weakened.
+
+## 11. Conclusion
+
+The useful object in AnttisNeuron is not “a neuron secretly does PCA” and not “a dendrite is literally an eigenmode purifier.” The more defensible object is a feedback system in which statistics, physical dynamics, bounded observation, local nonlinearities, and slow structural change can alter one another.
+
+Gate 5 shows that local structural activity can produce a strong alignment effect in one constructed branched substrate. Gate 5B shows that this effect is dominated by physical-basis reorientation. Gate 6 then demonstrates the limitation: the same rule is not generally beneficial across arbitrary branched worlds.
+
+That failure sharpens the research program. The next problem is not to search for another rule that makes the average green. It is to identify the physical conditions under which local structural credit becomes meaningful, then test those conditions on fresh worlds. Only after that should dendritic load be coupled to an adaptive AIS-like output boundary.
 
 ## References
 
-1. Oja, E. (1982). *A simplified neuron model as a principal component analyzer*. Journal of Mathematical Biology, 15, 267–273. DOI: 10.1007/BF00275687.
-2. Poirazi, P., Brannon, T., & Mel, B. W. (2003). *Pyramidal neuron as two-layer neural network*. Neuron, 37, 989–999. DOI: 10.1016/S0896-6273(03)00149-1.
-3. London, M., & Häusser, M. (2005). *Dendritic computation*. Annual Review of Neuroscience, 28, 503–532. DOI: 10.1146/annurev.neuro.28.061604.135703.
-4. Gidon, A., et al. (2020). *Dendritic action potentials and computation in human layer 2/3 cortical neurons*. Science, 367, 83–87. DOI: 10.1126/science.aax6239.
-5. Leterrier, C. (2018). *The Axon Initial Segment: An Updated Viewpoint*. Journal of Neuroscience, 38, 2135–2145. DOI: 10.1523/JNEUROSCI.1922-17.2018.
-6. Aizenbud, I., Yoeli, D., Beniaguev, D., de Kock, C. P. J., London, M., & Segev, I. (2026). *Dendritic morphology and synaptic nonlinearities enhance functional complexity in human cortical neurons*. Proceedings of the National Academy of Sciences, 123, e2533168123. DOI: 10.1073/pnas.2533168123.
+1. Oja E. (1982). A simplified neuron model as a principal component analyzer. *Journal of Mathematical Biology* 15:267–273. DOI: `10.1007/BF00275687`.
+2. Poirazi P, Brannon T, Mel BW. (2003). Pyramidal neuron as two-layer neural network. *Neuron* 37:989–999. DOI: `10.1016/S0896-6273(03)00149-1`.
+3. London M, Häusser M. (2005). Dendritic computation. *Annual Review of Neuroscience* 28:503–532. DOI: `10.1146/annurev.neuro.28.061604.135703`.
+4. Gidon A, et al. (2020). Dendritic action potentials and computation in human layer 2/3 cortical neurons. *Science* 367:83–87. DOI: `10.1126/science.aax6239`.
+5. Leterrier C. (2018). The Axon Initial Segment: An Updated Viewpoint. *Journal of Neuroscience* 38:2135–2145. DOI: `10.1523/JNEUROSCI.1922-17.2018`.
+6. Aizenbud I, Yoeli D, Beniaguev D, de Kock CPJ, London M, Segev I. (2026). Dendritic morphology and synaptic nonlinearities enhance functional complexity in human cortical neurons. *PNAS* 123:e2533168123. DOI: `10.1073/pnas.2533168123`.

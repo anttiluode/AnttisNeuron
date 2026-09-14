@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>AnttisNeuron — hand waving, then receipts</title>
+  <style>
+    :root{--bg:#07100f;--panel:#0d1d1a;--ink:#edf7f3;--muted:#9db5ae;--line:#23433a;--green:#70f0b5;--cyan:#6fdcff;--amber:#ffd27a;--rose:#ff8f9f}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 15% 5%,#173a30 0,#07100f 32rem),#07100f;color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}a{color:var(--cyan)}code,.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.wrap{width:min(1120px,calc(100% - 32px));margin:auto}nav{position:sticky;top:0;z-index:4;background:#07100fdd;border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}nav .wrap{display:flex;justify-content:space-between;align-items:center;min-height:58px}.brand{font-weight:850;letter-spacing:.08em}.links{display:flex;gap:18px;font-size:13px}.hero{padding:78px 0 44px}.eyebrow{color:var(--amber);font-weight:800;text-transform:uppercase;letter-spacing:.16em;font-size:12px}h1{font-size:clamp(44px,8vw,92px);line-height:.93;letter-spacing:-.055em;margin:10px 0 18px;max-width:920px}.lede{font-size:clamp(18px,2.2vw,24px);max-width:820px;color:#c7d9d4}.honesty{margin:24px 0 36px;border-left:2px solid var(--amber);padding:14px 18px;color:var(--muted);background:#ffd27a0a}.schematic{border:1px solid var(--line);border-radius:24px;overflow:hidden;background:linear-gradient(135deg,#0e2420,#081311);box-shadow:0 24px 80px #0006}.schematic svg{display:block;width:100%;height:auto}.wire{fill:none;stroke:#659889;stroke-width:5;stroke-linecap:round}.hot{stroke:var(--green);filter:drop-shadow(0 0 5px #70f0b577)}.node{fill:#102925;stroke:#87cab5;stroke-width:2}.soma{fill:#173d35;stroke:#91f0ce;stroke-width:3}.ais{fill:#302815;stroke:var(--amber);stroke-width:2}.axon{stroke:var(--cyan)}.pulse{fill:white;filter:drop-shadow(0 0 7px var(--green));animation:pulse 3.8s ease-in-out infinite}@keyframes pulse{0%,100%{opacity:.15}50%{opacity:1;transform:translateX(330px)}}.legend{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}.legend div{padding:14px 16px;border-right:1px solid var(--line)}.legend strong{display:block}.legend span{font-size:12px;color:var(--muted)}.divider{margin:70px auto 56px;padding:28px 0;border-block:1px solid var(--line);text-align:center}.divider b{font-size:clamp(24px,4vw,42px);letter-spacing:-.03em}.divider small{display:block;color:var(--muted);margin-top:8px}section{padding:30px 0 48px}h2{font-size:clamp(30px,5vw,50px);letter-spacing:-.035em;margin:0 0 8px}.copy{max-width:830px;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}.card{border:1px solid var(--line);border-radius:18px;padding:20px;background:#0d1d1acc}.card .n{display:block;font:800 clamp(28px,4vw,44px)/1 ui-monospace,monospace;color:var(--green);margin:8px 0}.card .k{font-size:12px;color:var(--muted)}.four{grid-template-columns:repeat(4,1fr)}.gates{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:22px}.gate{border:1px solid var(--line);border-radius:18px;padding:19px;background:#0b1917}.gate b{color:var(--cyan)}.gate p{color:var(--muted);font-size:14px}.gate .result{color:var(--ink);font-weight:750}.gate .not{border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:#8aa199}.warning{border-color:#705b2e;background:#271f10}.negative{border-color:#61323a;background:#251317}.future{border-color:#705b2e}.eq{padding:16px;border:1px solid var(--line);border-radius:12px;background:#050b0a;overflow:auto;color:#c8eee2;font-family:ui-monospace,monospace}.split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}footer{border-top:1px solid var(--line);padding:32px 0 50px;color:var(--muted);margin-top:40px}@media(max-width:800px){.links{display:none}.grid,.four,.gates,.split,.legend{grid-template-columns:1fr}.hero{padding-top:52px}}@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+<nav><div class="wrap"><div class="brand">ANTTISNEURON</div><div class="links"><a href="#g5">Gate 5</a><a href="#g5b">Gate 5B</a><a href="#g6">Gate 6</a><a href="PAPER.md">Paper</a><a href="README.md">README</a></div></div></nav>
+<main>
+<header class="hero wrap">
+  <div class="eyebrow">Wild hand waving / then executable tests</div>
+  <h1>Re-inventing a neuron badly enough to falsify it.</h1>
+  <p class="lede">The intuition: persistent input statistics meet a branching physical object; local activity changes that object; the changed object changes what can be learned next.</p>
+  <div class="honesty">This drawing is a conceptual map, not evidence and not a literal biophysical neuron. The repository earns claims one gate at a time—and Gate 6 is allowed to say the attractive rule does not generalize.</div>
+  <div class="schematic">
+    <svg viewBox="0 0 1000 400" role="img" aria-label="Conceptual neuron from dendrites to AIS">
+      <path class="wire hot" d="M100 90 C230 90 270 180 430 205 S560 205 630 205"/><path class="wire" d="M100 315 C230 315 285 245 430 220 S565 210 630 205"/><path class="wire hot" d="M120 205 C255 205 330 205 430 210 S560 207 630 205"/><path class="wire" d="M270 45 C310 95 345 155 430 205"/><path class="wire" d="M280 360 C325 315 360 250 430 220"/>
+      <circle class="node" cx="100" cy="90" r="14"/><circle class="node" cx="100" cy="315" r="14"/><circle class="node" cx="120" cy="205" r="14"/><circle class="node" cx="270" cy="45" r="10"/><circle class="node" cx="280" cy="360" r="10"/><circle class="soma" cx="670" cy="205" r="47"/><path class="wire axon" d="M717 205 L805 205"/><rect class="ais" x="805" y="184" width="92" height="42" rx="20"/><path class="wire axon" d="M897 205 L970 205"/><circle class="pulse" cx="110" cy="205" r="7"/>
+      <text x="40" y="35" fill="#9db5ae" font-size="17">statistical inputs</text><text x="330" y="35" fill="#9db5ae" font-size="17">branched physical operator</text><text x="625" y="280" fill="#9db5ae" font-size="16">soma</text><text x="790" y="270" fill="#ffd27a" font-size="16">AIS / output boundary</text><text x="805" y="291" fill="#9db5ae" font-size="13">future hypothesis</text>
+    </svg>
+    <div class="legend"><div><strong>Statistics</strong><span>Oja-like local learning selects one covariance direction.</span></div><div><strong>Substrate</strong><span>The branch operator has its own modes and time scales.</span></div><div><strong>Structure</strong><span>Gate 5 changes edge conductance using local activity only.</span></div><div><strong>Boundary</strong><span>AIS/load adaptation is not yet a tested gate.</span></div></div>
+  </div>
+</header>
+<div class="divider wrap"><b>Hand waving ends here. Executable claims begin here.</b><small>Scripts, tests and frozen JSON receipts decide what survives.</small></div>
+
+<section id="g5" class="wrap">
+  <h2>Gate 5: one strong synthetic world</h2>
+  <p class="copy">An 11-node graph cable adapts ten edge conductances from local voltage-difference energy. The rule never sees an eigenvector, Oja weight, alignment score, label, or held-out metric. Shuffled credit gets the exact same update-value multiset but on the wrong edges.</p>
+  <div class="grid"><div class="card"><span class="k">frozen</span><span class="n">0.7822</span>held-out alignment</div><div class="card"><span class="k">exact-multiset shuffled</span><span class="n">0.7592</span>held-out alignment</div><div class="card"><span class="k">correct local credit</span><span class="n">0.9002</span>held-out alignment</div></div>
+  <div class="split"><div class="card"><b>What it establishes</b><p>Local, alignment-blind structural change can improve statistical↔physical alignment in this constructed branched substrate.</p></div><div class="card warning"><b>What it does not</b><p>It does not show that biological dendrites use this plasticity law, and one success is not a general principle.</p></div></div>
+</section>
+
+<section id="g5b" class="wrap">
+  <h2>Gate 5B: spectral autopsy</h2>
+  <p class="copy">Was Gate 5 merely changing decay rates, or did the physical basis actually reorient? Diagnostic hybrid operators swap eigenvalues and eigenvectors separately.</p>
+  <div class="grid four"><div class="card"><span class="k">frozen</span><span class="n">.7822</span></div><div class="card"><span class="k">new eigenvalues / old basis</span><span class="n">.8011</span></div><div class="card"><span class="k">new basis / old eigenvalues</span><span class="n">.8924</span></div><div class="card"><span class="k">fully adapted</span><span class="n">.9002</span></div></div>
+  <div class="split"><div class="card"><b>Dominant diagnostic</b><p>Most of the Gate-5 gain follows the adapted <strong>physical basis</strong>, not the changed eigenvalues alone.</p></div><div class="card"><b>Slow-subspace rotation</b><p class="mono">principal angles ≈ 4.06°, 5.26°, 16.42°</p><p>Enough rotation exists to matter, while the substrate remains recognizably related to the original tree.</p></div></div>
+</section>
+
+<section id="g6" class="wrap">
+  <h2>Gate 6: make it survive other worlds</h2>
+  <p class="copy">The Gate-5 rule and hyperparameters are frozen. Twenty-four deterministic worlds vary tree topology, input ports, sensor locations and input covariance geometry. Failures are kept.</p>
+  <div class="grid"><div class="card"><span class="k">local beats frozen</span><span class="n">11 / 24</span></div><div class="card"><span class="k">mean local − frozen</span><span class="n">+0.0005</span></div><div class="card negative"><span class="k">mean local − shuffled</span><span class="n">−0.0031</span></div></div>
+  <div class="split"><div class="card"><b>Corrected metric</b><p>Alignment is the normalized projection into the span of the three slowest visible non-uniform physical modes. That makes the score invariant to arbitrary eigenvector rotations inside a degenerate eigenspace.</p><div class="eq">score = ||Uᵀ w|| / ||w||</div></div><div class="card negative"><b>The result refuses to flatter us</b><p>The unchanged local rule is approximately neutral versus frozen overall and slightly worse than shuffled overall. One world improves by about +0.344; another degrades by about −0.301.</p><p><strong>Gate 5 happened. Gate 6 says it is context-dependent.</strong></p></div></div>
+  <p class="copy">Absolute projection scores are mostly high because a three-dimensional subspace occupies most of the four-dimensional observed sensor space. The informative object is therefore the <strong>within-world delta</strong>, not the raw ≈0.93 mean score.</p>
+</section>
+
+<section id="gates" class="wrap">
+  <h2>The whole ladder</h2>
+  <div class="gates">
+    <div class="gate"><b>Gate 0</b><h3>Oja sanity</h3><p class="result">Leading-PC alignment 0.995595.</p><p class="not">Prior mathematics reproduced; not a new biological claim.</p></div>
+    <div class="gate"><b>Gate 1</b><h3>Exact identities</h3><p class="result">Linear branches collapse; nonlinear branches form a shallow network; squares give xᵀQx.</p><p class="not">Algebra, not empirical neuroscience.</p></div>
+    <div class="gate"><b>Gate 2</b><h3>Variance-only task</h3><p class="result">Raw linear 0.494; square branches 0.935.</p><p class="not">Purpose-built second-order task.</p></div>
+    <div class="gate"><b>Gate 3</b><h3>Differential decay</h3><p class="result">Slow/fast relative ratio at t=20: 36.598×.</p><p class="not">Relative purification, not absolute amplification.</p></div>
+    <div class="gate"><b>Gate 4</b><h3>Constructive recurrence</h3><p class="result">Alignment 0.722183 → 0.999010.</p><p class="not">Existence proof with hand-built dynamics.</p></div>
+    <div class="gate"><b>Gate 5</b><h3>Local structural adaptation</h3><p class="result">0.782185 → 0.900191; shuffled 0.759219.</p><p class="not">Strong synthetic success, not generality.</p></div>
+    <div class="gate"><b>Gate 5B</b><h3>What moved?</h3><p class="result">Basis-only 0.892401 vs eigenvalue-only 0.801087.</p><p class="not">Diagnostic hybrids are not literal cables.</p></div>
+    <div class="gate negative"><b>Gate 6</b><h3>Many worlds</h3><p class="result">11/24 wins vs frozen; aggregate delta ≈ 0.</p><p class="not">The rule does not generalize universally. That is the result.</p></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Where the real biology points next</h2>
+  <p class="copy">Aizenbud et al. (2026) make morphology hard to reduce to a branch counter: dendritic area and bifurcation geometry are strong predictors of modeled single-neuron functional complexity, together with nonlinear NMDA integration. Leterrier (2018) reviews the AIS as a plastic determinant of excitability. Those papers motivate two separate next questions; they do not retroactively validate this graph rule.</p>
+  <div class="split"><div class="card"><b>Next: world anatomy</b><p>Why do a few Gate-6 worlds improve enormously while others collapse? Examine geometry, electrical distance, observability, spectral gaps, local-energy heterogeneity and load proxies before changing the learning law.</p></div><div class="card future"><b>AIS / output boundary — future hypothesis</b><p>After the dendritic analysis, test whether a slow output-threshold/excitability variable driven by dendritic load can stabilize behavior across changing upstream morphology. Keep fixed-boundary controls and call it an AIS <em>surrogate</em>, not a detailed AIS model.</p></div></div>
+</section>
+</main>
+<footer><div class="wrap"><p><a href="README.md">README</a> · <a href="PAPER.md">working paper</a> · <a href="results/gate5.json">Gate 5 receipt</a> · <a href="results/gate5b.json">Gate 5B receipt</a> · <a href="results/gate6.json">Gate 6 receipt</a></p><p>Serious tests underneath an unserious title. Negative scientific outcomes stay in the repo.</p></div></footer>
+</body>
+</html>

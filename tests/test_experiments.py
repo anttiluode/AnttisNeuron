@@ -6,6 +6,7 @@ from experiments.gate2_mode_energy import run as run2
 from experiments.gate3_temporal_modes import run as run3
 from experiments.gate4_alignment import run as run4
 from experiments.gate5_adaptive_cable import run as run5
+from experiments.gate5b_spectral_audit import run as run5b
 
 
 def _all_finite(value):
@@ -21,7 +22,7 @@ def _all_finite(value):
 
 
 def test_all_gates_are_finite_and_deterministic():
-    for gate in (run0, run1, run2, run3, run4, run5):
+    for gate in (run0, run1, run2, run3, run4, run5, run5b):
         a = gate(seed=17)
         b = gate(seed=17)
         assert a == b
@@ -78,6 +79,24 @@ def test_gate5_reports_controls_without_requiring_positive_result():
     assert result["adaptive_spectral_radius"] < 1.0
     assert result["common_tape_digest"] == result["control_tape_digest"]
     assert result["control_update_multiset_max_error"] < 1e-12
+
+
+def test_gate5_frozen_receipt_headlines_do_not_move():
+    result = run5(seed=17)
+    assert math.isclose(result["adaptive_heldout_mean_alignment"], 0.9001914311455128, abs_tol=1e-12)
+    assert math.isclose(result["frozen_heldout_mean_alignment"], 0.7821845260371927, abs_tol=1e-12)
+
+
+def test_gate5b_reports_decomposition_without_sign_requirement():
+    result = run5b(seed=17)
+    assert result["gate"] == "5B"
+    assert len(result["slow_subspace_principal_angles_degrees"]) == 3
+    assert set(result["diagnostic_conditions"]) == {
+        "frozen",
+        "eigenvalue_only",
+        "eigenvector_only",
+        "adapted",
+    }
 
 
 def test_gate3_receipt_preserves_requested_seed():
