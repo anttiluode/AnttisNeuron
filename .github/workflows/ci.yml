@@ -28,3 +28,6 @@ jobs:
           python experiments/gate4_alignment.py --out /tmp/gate4.json
           python experiments/gate5_adaptive_cable.py --out /tmp/gate5.json
           python experiments/gate5b_spectral_audit.py --out /tmp/gate5b.json
+      - name: Freeze Gate 6 24-world receipt
+        if: matrix.python-version == '3.11'
+        run: python experiments/gate6_many_worlds.py --worlds 24 --out /tmp/gate6.json
