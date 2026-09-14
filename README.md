@@ -6,7 +6,7 @@
 
 > **When can local statistics and a physical branched operator reshape one another, and when does that idea fail?**
 
-See [PAPER.md](PAPER.md) for the Gates 0–6 argument, [index.html](index.html) for the visual companion, and `results/gate*.json` for frozen receipts.
+See [PAPER.md](PAPER.md) for the Gates 0–6 argument, [[index.html](index.html)](https://anttiluode.github.io/AnttisNeuron/) for the visual companion, and `results/gate*.json` for frozen receipts.
 
 ## Current result spine
 
