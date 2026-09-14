@@ -77,6 +77,7 @@ def test_gate5_reports_controls_without_requiring_positive_result():
     assert len(result["adaptive_conductances"]) == 10
     assert result["adaptive_spectral_radius"] < 1.0
     assert result["common_tape_digest"] == result["control_tape_digest"]
+    assert result["control_update_multiset_max_error"] < 1e-12
 
 
 def test_gate3_receipt_preserves_requested_seed():
