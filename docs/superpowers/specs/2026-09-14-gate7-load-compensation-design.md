@@ -2,35 +2,41 @@
 
 Date: 2026-09-14
 Branch: `study/gate7-load-compensation`
-Status: approved design, implementation not yet started
+Status: corrected design approved after pre-assay debugging; 24-world science has not yet run
 
 ## Scientific question
 
-Gate 6 showed that the Gate-5 local structural rule does not generally improve statistical↔physical alignment across 24 deterministic branched worlds. Gate 7 asks a different question and does not attempt to rescue that result:
+Gate 6 showed that the Gate-5 local structural rule does not generally improve statistical↔physical alignment across 24 deterministic branched worlds. Gate 7 asks a different downstream question:
 
-> When dendritic morphology and conductance produce different electrical loads, can a downstream AIS-like boundary adapt locally so that the neuron's input-output function remains more invariant across those loads?
+> When frozen dendritic morphology and conductance present different electrical loads at the soma, can a downstream AIS-like boundary adapt using only its own output rate so that the neuron's somatic current→output transfer function remains more invariant across those loads?
 
 The intended causal chain is:
 
 ```text
-input statistics
+Gate-6 local dendritic adaptation
     ↓
-dendritic structure / conductance
+frozen dendritic structure / conductance
     ↓
-electrical load at the soma-AIS boundary
+driving-point electrical load at soma node 0
     ↓
-output excitability
+somatic current → soma voltage
+    ↓
+AIS-like output excitability
     ↓
 local output-rate homeostasis
 ```
 
-The dendritic substrate is fixed during Gate 7. Only the output-boundary excitability parameter may adapt.
+The dendritic substrate is fixed during Gate 7. Only the output-boundary excitability gain may adapt.
+
+## Why the assay was corrected before scientific execution
+
+The first implementation draft drove the cable through the four distal Gate-6 input ports while using somatic driving-point conductance as the oracle. A RED-stage safeguard exposed that mismatch before the 24-world result was run. Distal-port→soma transfer depends on path geometry as well as somatic load, so the proposed oracle was not an oracle for that experiment. Independent zero-mean random tapes also coupled to the cable's slow global mode and produced a large finite-sample DC shift between calibration and evaluation.
+
+The approved correction is therefore to probe the quantity Gate 7 actually claims to study: inject controlled current directly at soma node `0` and measure the steady-state soma voltage presented to the AIS-like boundary. This makes the load-ratio oracle exactly matched to the measured physics and removes random-tape/DC confounds. The correction was made before any 24-world Gate-7 receipt existed.
 
 ## Biological anchors and limits
 
-This is motivated by, not identified with, biological AIS plasticity. Hay et al. showed that axosomatic excitability depends on dendritic load and introduced conductance-load scaling across morphologies. Aizenbud et al. reuse dendrite-to-soma / dendrite-to-axon conductance ratios when normalizing active conductances across morphologies. Leterrier reviews AIS position/composition as plastic determinants of excitability.
-
-Gate 7 remains a synthetic graph-cable experiment. The AIS-like boundary is a minimal rate surrogate, not a conductance-based axon initial segment. No claim will be made that real AIS plasticity follows the exact update rule below.
+This is motivated by, not identified with, biological AIS plasticity. Dendritic morphology changes the electrical load seen by the spike-initiation region, and AIS properties are plastic determinants of excitability. Gate 7 remains a synthetic graph-cable experiment. The AIS-like boundary is a minimal deterministic rate surrogate, not a conductance-based axon initial segment. No claim is made that real AIS plasticity follows the exact update rule below.
 
 ## Substrates
 
@@ -41,11 +47,11 @@ For each world:
 1. Reproduce the Gate-6 local-adaptation trajectory with the Gate-5 rule frozen exactly as before.
 2. Freeze the resulting local-adapted conductances.
 3. Treat node `0` as the soma / output-boundary interface.
-4. Generate a fresh Gate-7 calibration tape and independent held-out evaluation tape from fixed predeclared seeds.
+4. Do not use Gate-6 held-out covariance tapes, Oja states, sensors, or alignment scores in Gate 7.
 
-Using the local-adapted Gate-6 structures makes the load variation partly input-shaped, while keeping the Gate-7 output adaptation causally downstream. Gate 7 does not feed its output metric back into dendritic adaptation.
+Using the locally adapted Gate-6 structures gives Gate 7 a deterministic family of different dendritic loads while keeping output adaptation causally downstream. Gate 7 does not feed its metric back into dendritic adaptation.
 
-The Gate-7 master seed is `17`. Dendritic adaptation is reproduced exactly from Gate 6. Gate-7 calibration uses a separate `SeedSequence([7017, world.seed, world.index])`; held-out evaluation uses `SeedSequence([8017, world.seed, world.index])`. Each calibration tape has `3000` four-dimensional samples; each held-out base tape has `5000` samples. These seeds and lengths are frozen before scientific execution.
+The Gate-7 master seed remains `17` only to select the existing deterministic world suite and reproduce Gate-6 conductance training. Gate-7 output-boundary calibration/evaluation itself is deterministic and contains no random input tape.
 
 ## Electrical-load measurement
 
@@ -63,16 +69,26 @@ Partition `G` into soma node `0` and the remaining dendritic nodes. Define the d
 g_{load} = G_{00} - G_{0r} G_{rr}^{-1} G_{r0}.
 ```
 
-This scalar is positive for the stable leaky cable and measures the steady-state electrical load presented by the dendritic tree at the output boundary.
+For a constant somatic current `I`, the steady-state cable equation is
 
-Only the oracle condition may read `g_load`. The homeostatic condition must not receive `g_load`, world identity, topology, conductances, eigenmodes, spectral alignment, or target-curve error.
+```math
+Gv = I e_0,
+```
+
+so
+
+```math
+v_{soma}(I) = I / g_{load}.
+```
+
+Implementation must verify the Schur-complement scalar against the direct linear solve on representative worlds. Only the oracle condition may read `g_load`. The local homeostatic condition must not receive `g_load`, world identity, topology, conductances, eigenmodes, spectral alignment, or target-curve error.
 
 ## AIS-like output boundary
 
-The output boundary is deliberately minimal. Let `v_t` be the soma-node voltage generated by the fixed dendritic cable. Define a deterministic rate surrogate
+Let `v` be the steady-state soma voltage generated by the frozen dendritic load. Define a deterministic rate surrogate
 
 ```math
-r_t = \sigma\!\left(\beta\,[a\,v_t - \theta]\right),
+r = \sigma\!\left(\beta\,[a\,v - \theta]\right),
 ```
 
 where:
@@ -82,41 +98,53 @@ where:
 - `a > 0` is the boundary excitability gain,
 - `sigma` is the logistic function.
 
-The model does not sample spikes. `r_t` is a bounded firing-rate surrogate used to measure transfer functions cleanly and deterministically.
+The model does not sample spikes. `r` is a bounded firing-rate surrogate used to measure transfer functions cleanly and deterministically.
 
 ## Reference calibration
 
-World `0` is the predeclared reference world.
+World `0` is the predeclared reference world. Let
 
-Using only its Gate-7 calibration tape at unit input scale:
+```math
+v_* = v_{soma,ref}(I=1) = 1/g_{load,ref}.
+```
 
-1. set `a = 1`,
-2. compute the post-burn soma-voltage standard deviation `s_v`,
-3. set `beta = 2 / s_v`,
-4. choose `theta` by deterministic bisection so the reference world reaches target mean rate `r_* = 0.25`,
-5. freeze `theta`, `beta`, and `r_*` for every other world and every condition.
+Freeze the output nonlinearity analytically from the reference world before evaluating any non-reference world:
 
-The cable burn-in is `250` samples, matching the existing Gate-6 evaluation convention. If `s_v` is nonfinite or `<= 1e-12`, the assay is invalid and fails engineering verification. No held-out world metric is used in calibration.
+```math
+r_* = 0.25
+```
+
+```math
+\beta = 4 / v_*
+```
+
+and choose `theta` exactly so the reference world at unit current and `a=1` has rate `r_*`:
+
+```math
+\theta = v_* - \operatorname{logit}(r_*)/\beta.
+```
+
+The coefficient `4` is predeclared. It makes the reference current sweep nontrivial without using any non-reference-world outcome. With the fixed sweep below, the reference curve must have dynamic range at least `0.10`; otherwise the assay is invalid and engineering verification fails.
 
 ## Three conditions
 
 ### 1. Fixed boundary
 
-`a = 1` in every world. This exposes how much the same output boundary changes behavior when dendritic load changes.
+`a = 1` in every world. This exposes how the same output boundary changes behavior when dendritic load changes.
 
 ### 2. Local homeostatic boundary
 
-Start from `a = 1`. Repeat the same world-specific calibration tape for exactly `12` homeostatic phases. At each phase update log-gain from the boundary's own mean output rate:
+Start from `a = 1`. At unit somatic current (`I=1`), repeat exactly `12` deterministic homeostatic phases. At each phase compute only the boundary's own current output rate and update log-gain:
 
 ```math
 \log a \leftarrow \operatorname{clip}\left(
-\log a + 0.5 (r_* - \bar r),
+\log a + 0.5 (r_* - r),
 \log 0.2,
 \log 5.0
 \right).
 ```
 
-The adaptor receives only `bar_r`, the fixed target rate `r_*`, and its current `a`. It cannot read dendritic load or any structural variable.
+The adaptor receives only `r`, fixed target rate `r_*`, and its current `a`. It cannot read dendritic load or any structural variable. Because the assay is deterministic, there is no averaging tape and no sampling noise to hide what the local rule is doing.
 
 ### 3. Oracle load-scaled boundary
 
@@ -126,29 +154,35 @@ The oracle does not learn. It uses the closed-form load ratio
 a_{oracle} = \frac{g_{load}(world)}{g_{load}(reference)}.
 ```
 
-The oracle ratio is not clipped. If it drives the rate surrogate into a poor operating regime, that is part of the scientific result. The intuition is that higher driving-point conductance lowers voltage response for comparable injected drive, so output excitability should scale with the load ratio. This is a diagnostic reference, not a proposed local mechanism.
+The ratio is not clipped. Under this corrected somatic-current assay,
+
+```math
+a_{oracle} v_{soma,world}(I) = v_{soma,ref}(I),
+```
+
+so the oracle should reproduce the reference transfer curve up to numerical precision. Failure of that identity is an engineering error, not an adverse scientific result.
 
 ## Evaluation protocol
 
-Use the same held-out base tape for all three output-boundary conditions within a world. Evaluate the exact fixed input-amplitude sweep
+Evaluate the exact somatic-current sweep
 
 ```text
 0.50, 0.75, 1.00, 1.25, 1.50
 ```
 
-by multiplying the held-out base tape by each scale. Conditions therefore differ only in the output-boundary gain.
+for all three output-boundary conditions. The dendritic conductances are frozen and identical across the three conditions within a world. Conditions differ only in the output-boundary gain.
 
 For every world and condition, record:
 
-- mean rate at each of the five input scales,
-- input-output curve RMSE relative to the reference-world fixed-boundary curve,
-- an interpolated rheobase analogue: the first input scale where mean rate crosses `0.10`, linearly interpolated between adjacent sweep points; if no crossing exists, record `null`,
-- F-I gain defined as the least-squares slope through the three central sweep points `0.75, 1.00, 1.25`,
-- mean rate at scale `1.0`,
+- mean/deterministic rate at each of the five current levels,
+- current-output curve RMSE relative to the reference-world fixed-boundary curve,
+- an interpolated rheobase analogue: the first current where rate crosses `0.10`, linearly interpolated between adjacent sweep points; if no crossing exists, record `null`,
+- F-I gain defined as the least-squares slope through current levels `0.75, 1.00, 1.25`,
+- rate at current `1.0`,
 - final excitability gain `a`,
 - driving-point load `g_load` (reported for analysis; hidden from the local learner).
 
-Across worlds, report mean/median/upper-quartile curve RMSE, unit-scale-rate standard deviation, finite rheobase standard deviation plus missing-count, and F-I-gain standard deviation.
+Across worlds, report mean/median/upper-quartile curve RMSE, unit-current-rate standard deviation, finite rheobase standard deviation plus missing-count, and F-I-gain standard deviation.
 
 ## Anti-silence / anti-saturation safeguards
 
@@ -156,59 +190,55 @@ Raw variance alone is not a success metric because a condition could reduce disp
 
 Therefore:
 
-- the primary metric is input-output **curve error relative to the nontrivial reference curve**,
-- the reference curve must have `max(rate)-min(rate) >= 0.10` across the five input scales,
+- the primary metric is full current-output **curve error relative to the nontrivial reference curve**,
+- the reference curve must have `max(rate)-min(rate) >= 0.10`,
 - condition summaries report both dispersion and mean operating rate,
-- a world with unit-scale mean rate `< 0.02` or `> 0.98` is flagged as collapsed rather than counted as a successful compensation,
+- a world with unit-current rate `< 0.02` or `> 0.98` is flagged as collapsed rather than counted as successful compensation,
 - collapsed worlds remain in all curve-error aggregates.
 
-CI tests these assay/invariant rules but does not require the local condition to beat fixed or approach the oracle.
+CI tests these assay/invariant rules but does not require the local condition to beat fixed.
 
 ## Primary scientific comparisons
 
 For each non-reference world, define
 
 ```math
-\Delta_{homeo} = E_{fixed} - E_{homeostatic}
+\Delta_{homeo} = E_{fixed} - E_{homeostatic},
 ```
 
-and
+where `E` is curve RMSE relative to the reference transfer function. Positive values mean reduced error.
 
-```math
-\Delta_{oracle} = E_{fixed} - E_{oracle},
-```
+The oracle is a diagnostic identity control under the corrected assay. Its curve RMSE is expected to be numerical zero and is reported, but `oracle > fixed` is not treated as a scientific discovery.
 
-where `E` is held-out curve RMSE relative to the reference transfer function. Positive values mean reduced error. World `0` is retained in receipts but excluded from mean delta summaries because it defines the reference curve.
-
-Report mean, median, lower quartile, win fraction, and worst case for both deltas. Also report whether load predicts fixed-boundary curve distortion and whether learned `a` tracks the oracle load ratio, but these correlations are descriptive secondary measurements.
+For local homeostasis report mean, median, lower quartile, win fraction, and worst-case `Delta_homeo`. Also report the descriptive correlation between load ratio and learned gain ratio. Scientific failure remains a valid result.
 
 ## Falsification criteria
 
 Gate 7 fails scientifically if any of the following occurs:
 
 - local homeostasis does not reduce transfer-function variability relative to fixed,
-- local homeostasis restores mean rate but damages gain/rheobase so the full curve is not preserved,
-- the oracle load ratio itself does not meaningfully compensate the synthetic cable,
+- local homeostasis restores unit-current rate but damages the rest of the curve,
 - the local rule succeeds only by saturating or silencing the output,
-- compensation is highly world-specific rather than systematic.
+- compensation is highly world-specific rather than systematic,
+- learned gain does not track the direction/magnitude of the hidden load change.
 
 Failures are retained in the frozen receipt. No positive scientific delta is required by CI.
 
 ## Software boundaries
 
-Add a focused module, `anttis_neuron/output_boundary.py`, containing:
+Keep `anttis_neuron/output_boundary.py` focused on:
 
 - driving-point conductance calculation,
-- rate-boundary forward function,
-- deterministic reference-threshold calibration,
+- deterministic rate-boundary forward function,
 - local homeostatic gain update,
-- transfer-curve metrics.
+- transfer-curve metrics,
+- a small steady-state soma-voltage helper or equivalent exact implementation.
 
-Add `experiments/gate7_load_compensation.py` for the scientific protocol and `tests/test_output_boundary.py` plus `tests/test_gate7.py` for focused unit and experiment invariants.
+`calibrate_threshold` may remain as a tested generic primitive from the earlier RED/GREEN cycle, but corrected Gate 7 must use the analytic reference calibration above.
 
-Gate-6 code and receipts remain unchanged. Reuse Gate-6 world generation and dendritic training, factoring a stable helper only if necessary and pinning Gate-6 numerical regression before any refactor.
+Use `experiments/gate7_load_compensation.py` for the scientific protocol and `tests/test_output_boundary.py` plus `tests/test_gate7.py` for focused unit and experiment invariants. Delete the temporary diagnostic test once its root-cause evidence has been incorporated into this design.
 
-The frozen receipt will be `results/gate7.json`.
+Gate-6 code and receipts remain numerically unchanged. The frozen Gate-7 receipt will be `results/gate7.json`.
 
 ## CI invariants
 
@@ -216,16 +246,18 @@ CI must verify:
 
 - deterministic 24-world definition,
 - positive finite driving-point load,
-- common evaluation tapes across conditions,
+- Schur-complement load agrees with direct steady-state solve,
+- somatic steady-state voltage obeys `v=I/g_load`,
 - local adaptor interface cannot accept load/structure/spectral information,
 - oracle gain equals the documented unclipped load ratio,
+- oracle curves match the reference curve to numerical precision,
 - fixed and local conditions begin from identical `a = 1`,
 - rate outputs are finite and in `[0,1]`,
 - reference curve dynamic range is at least `0.10`,
 - collapsed worlds are retained rather than dropped from curve-error aggregates,
 - full Gate-7 receipt is reproducible,
 - Gate-6 frozen receipt remains byte-for-byte unchanged,
-- no scientific-positive assertion is encoded as a test.
+- no scientific-positive assertion about local homeostasis is encoded as a test.
 
 A small two-world test is used for fast CI invariants; the full 24-world receipt runs once on Python 3.11, while the engineering suite runs on Python 3.11 and 3.12.
 
@@ -235,6 +267,7 @@ Gate 7 does not:
 
 - optimize Gate-6 spectral alignment,
 - modify dendritic conductances during AIS adaptation,
+- use distal-port transfer as a proxy for somatic load,
 - implement Hodgkin-Huxley channels,
 - claim a literal biological AIS mechanism,
 - use output labels or task supervision,
@@ -250,4 +283,4 @@ The proposed 24×24 matrix is a separate post-Gate-7 experiment: score each adap
 
 The recursive `sigh_image_live_loop_fixed.py` repeatedly applies the same spectral filter, so purification strength depends on iteration count. A future temporal gate should ask whether a finite signal train and physical path/integration length create an analogous matching condition: signals may become usable only after spending a characteristic time in a recurrent/propagating substrate.
 
-This must be tested as a temporal hypothesis, not inferred from spatial morphology. The newer gamma-phase work provides a strong reason to care about arrival timing, while recent human auditory-cortex work constrains integration windows to be predominantly tied to absolute time rather than stimulus-structure duration. Those results motivate a timing gate but do not show that dendrite length determines the relevant window.
+This must be tested as a temporal hypothesis, not inferred from spatial morphology. Arrival timing motivates a timing gate but does not show that dendrite length determines the relevant integration window.
